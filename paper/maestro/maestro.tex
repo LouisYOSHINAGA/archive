@@ -1,0 +1,481 @@
+\documentclass[dvipdfmx]{beamer}
+\usepackage{ybt}
+
+\DeclareFontShape{JY1}{gt}{m}{it}{<->ssub*gt/m/n}{}
+\DeclareFontShape{JT1}{gt}{m}{it}{<->ssub*gt/m/n}{}
+
+
+\ytitle{MAESTRO \ (Hawthorne+, 2019)}
+{Enabling Factorized Piano Music Modeling and Generation with the MAESTRO Dataset}
+{Curtis Hawthorne et al., 2019}
+{\today}
+
+
+\begin{document}
+
+\begin{frame}[plain,noframenumbering]
+    \titlepage
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Overview}
+    \yhead{Enabling Factorized Piano Music Modeling and Generation}\\
+    \yhead{with the MAESTRO dataset}
+    \yvspace{0.5}
+    \begin{itemize}
+        \yinner{1}
+        \item Topic: Making Dataset, Music Generation
+        \item Contributions:
+        \begin{itemize}
+            \yinner{1}
+            \item MAESTRO dataset: Piano performance audio \& aligned MIDI
+            \item Wave2Midi2Wave: Musical audio modeling
+            \item Achieved sota result on a transcription model
+        \end{itemize}
+    \end{itemize}
+    \yvspace{1}
+    %
+    \begin{itemize}
+        \item Generated samples: {\scriptsize \url{https://goo.gl/magenta/maestro-examples}}
+        \item MAESTRO dataset: {\scriptsize \url{https://g.co/magenta/maestro-dataset}}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Introduction}
+    \begin{itemize}
+        \item Explicitly factorize the problem:
+            \begin{yalign}
+                P(audio) = \mathbb{E}_{notes}\left[P(audio \mid notes) \right]
+            \end{yalign}
+            which can be thought of as a generative model with notes
+        \yvspace{0.75}
+        %
+        \item Split the model into three separately trained modules:
+        \begin{enumerate}
+            \item \structure{\textit{Encoder}, $P(notes \mid audio)$ :}
+            \begin{itemize}
+                 \item Transcription model: Onsets and Frames \cite{onsetandframes}
+                 \item Produce MIDI from raw audio
+            \end{itemize}
+            %
+            \item \structure{\textit{Prior}, $P(notes)$ :}
+            \begin{itemize}
+                \item Language model: Music Transformer \cite{musictransformer}
+                \item Generate new performances in MIDI format
+            \end{itemize}
+            %
+            \item \structure{\textit{Decoder}, $P(audio \mid notes)$ :}
+            \begin{itemize}
+                \item Synthesis model: WaveNet \cite{wavenet}
+                \item Generate audio of the performances conditioned on MIDI
+            \end{itemize}
+        \end{enumerate}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Wave2Midi2Wave}
+    \yfigcap{width=\textwidth}{figure/wave2midi2wave.png}{Wave2Midi2Wave system architecture}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Dataset}
+    \yhead{MAESTRO {\footnotesize (MIDI and Audio Edited for Synchronous TRacks and Organization)}}
+    \yvspace{0.2}
+    \begin{itemize}
+        \yinner{1}
+        \item Contains over a week of paired audio and MIDI recording
+        \begin{itemize}
+            \yinner{1}
+            \item From 9 years of International Piano-e-Competition events
+        \end{itemize}
+        \item Repertoire: Mostly classical {\footnotesize (17$^{\mathrm{th}}$ to early 20$^{\mathrm{th}}$ century)}
+    \end{itemize}
+    \yvspace{0.25}
+    %
+    \begin{itemize}
+        \yinner{1}
+        \item Audio: CD quality or higher {\footnotesize (44.1kHz--48kHz 16bit PCM stereo)}
+        \item MIDI: Includes key strike velocities, sustain pedal position
+        \begin{itemize}
+            \yinner{1}
+            \item Audio and MIDI files are aligned with $\approx$ 3ms accuracy
+            \item Anotated with composer, title, year of performance
+        \end{itemize}
+    \end{itemize}
+    \yvspace{-0.5}
+    %
+    \yfig{width=0.7\textwidth}{figure/datasets_comparison.png}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Piano Transcription \ (Wave2Midi)}
+    \yhead{Piano Transcription}
+    \begin{itemize}
+        \yinner{1}
+        \item Model: Onsets and Frames \cite{onsetandframes} \ {\small (with several modifications)}
+        \item Train the model on MAESTRO dataset
+        \begin{itemize}
+            \yinner{1}
+            \item The best ways to get higher performance with the larger dataset \\
+                were to make the model larger and simpler
+        \end{itemize}
+    \end{itemize}
+    \yvspace{0.75}
+    %
+    \yhead{Results {\scriptsize (MAPS)}}
+    \begin{itemize}
+        \yinner{1}
+        \item Task: Piano transcription
+        \item Test data: MAPS configuration 2 test dataset
+        \item Achieved state of the art results for the MAPS dataset
+            \yfig{width=0.9\textwidth}{figure/transcription_comparison.png}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Piano Transcription \ (Wave2Midi)}
+    \yhead{Results {\scriptsize (MAESTRO)}}
+    \begin{itemize}
+        \yinner{1}
+        \item Task: Piano transcription
+        \item Apply the transcription model to the MAESTRO dataset
+        \item Present results on the MAESTRO dataset as a new baseline score
+            \yfig{width=0.9\textwidth}{figure/transcription_tvt.png}
+    \end{itemize}
+    \yvspace{1}
+    %
+    \yhead{MAESTRO-T}
+    \begin{itemize}
+        \yinner{1}
+        \item Transcribe the audio in the MAESTRO training set
+        \item Dataset with MAESTRO's audio and MIDI transcribed of it
+    \end{itemize}
+    \yvspace{-0.25}
+    \yfig{width=0.5\textwidth}{figure/maestro_t.png}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Music Transformer Training}
+    \yhead{Music Generation}
+    \begin{itemize}
+        \yinner{1}
+        \item Model: Music Transformer \cite{musictransformer}
+        \item Format: Piano performance MIDI
+    \end{itemize}
+    \yvspace{0.5}
+    %
+    \yhead{Training}
+    \begin{itemize}
+        \yinner{1}
+        \item Training Music Transformer on \{ MAESTRO, MAESTRO-T \}
+        \begin{itemize}
+            \yinner{1}
+            \item Data augmentation: transposition, time compression/stretching
+        \end{itemize}
+        \item Model evaluation:
+            \yvspace{-1}
+            \yfig{width=0.8\textwidth}{figure/transformer_validation.png}
+    \end{itemize}
+    \yvspace{0.25}
+    %
+    \yhead{Samples}
+    \begin{itemize}
+        \yinner{1}
+        \item {\scriptsize \url{https://goo.gl/magenta/maestro-examples}}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Piano Synthesis \ (Midi2Wave)}
+    \yhead{Audio Synthesis}
+    \begin{itemize}
+        \yinner{1}
+        \item Model: WaveNet \cite{wavenet} \ {\small (with several modifications)}
+        \item Provide a MIDI sequence as conditioning information
+        \begin{itemize}
+            \yinner{1}
+            % \item The model can focus on local structure
+            \item cf. linguistic features in TTS
+        \end{itemize}
+    \end{itemize}
+    \yvspace{0.25}
+    %
+    \yhead{Training}
+    \begin{enumerate}
+        \yinner{1}
+        \item \structure{Unconditional:}
+            trained only with the audio from MAESTRO
+        \item \structure{Ground:}
+            trained with audio/MIDI pairs from MAESTRO
+        \item \structure{Transcribed:}
+            trained with audio and MIDI from MAESTRO-T
+    \end{enumerate}
+    \yvspace{0.5}
+    %
+    \yhead{Samples}
+    \begin{itemize}
+        \yinner{1}
+        \item Model recreates non-piano subtleties of the recording
+        \item Feed one-hot year vector for timbral shift
+        \begin{itemize}
+            \yinner{1}
+            \item cf. speaker conditioning in TTS
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Listening Tests}
+    \begin{itemize}
+        \item Presented users with two 20-second clips, \\
+            asked which clip sounded more like a real recording of piano playing
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Models {\scriptsize (Audio/MIDI)}:
+        \begin{itemize}
+            \item \structure{Ground Truth Recordings}
+            \item \structure{WaveNet Unconditioned}
+            \item \structure{WaveNet Ground/Test}
+            \item \structure{WaveNet Transcribed/Test}
+            \item \structure{WaveNet Transcribed/Transformer}
+        \end{itemize}
+        \yvspace{6}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[noframenumbering]
+    \frametitle{Listening Tests}
+    \begin{itemize}
+        \item Presented users with two 20-second clips, \\
+            asked which clip sounded more like a real recording of piano playing
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Models {\scriptsize (Audio/MIDI)}:
+        \begin{itemize}
+            \item \alert{Ground Truth Recordings}
+            \item \structure{WaveNet Unconditioned}
+            \item \structure{WaveNet Ground/Test}
+            \item \structure{WaveNet Transcribed/Test}
+            \item \structure{WaveNet Transcribed/Transformer}
+        \end{itemize}
+        \yfig{width=0.5\textwidth}{figure/groundtruthaudio.png}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[noframenumbering]
+    \frametitle{Listening Tests}
+    \begin{itemize}
+        \item Presented users with two 20-second clips, \\
+            asked which clip sounded more like a real recording of piano playing
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Models {\scriptsize (Audio/MIDI)}:
+        \begin{itemize}
+            \item \structure{Ground Truth Recordings}
+            \item \alert{WaveNet Unconditioned}
+            \item \structure{WaveNet Ground/Test}
+            \item \structure{WaveNet Transcribed/Test}
+            \item \structure{WaveNet Transcribed/Transformer}
+        \end{itemize}
+        \yfig{width=0.5\textwidth}{figure/wavenet_unconditioned.png}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[noframenumbering]
+    \frametitle{Listening Tests}
+    \begin{itemize}
+        \item Presented users with two 20-second clips, \\
+            asked which clip sounded more like a real recording of piano playing
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Models {\scriptsize (Audio/MIDI)}:
+        \begin{itemize}
+            \item \structure{Ground Truth Recordings}
+            \item \structure{WaveNet Unconditioned}
+            \item \alert{WaveNet Ground/Test}
+            \item \structure{WaveNet Transcribed/Test}
+            \item \structure{WaveNet Transcribed/Transformer}
+        \end{itemize}
+        \yfig{width=0.5\textwidth}{figure/wavenetground_test.png}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[noframenumbering]
+    \frametitle{Listening Tests}
+    \begin{itemize}
+        \item Presented users with two 20-second clips, \\
+            asked which clip sounded more like a real recording of piano playing
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Models {\scriptsize (Audio/MIDI)}:
+        \begin{itemize}
+            \item \structure{Ground Truth Recordings}
+            \item \structure{WaveNet Unconditioned}
+            \item \structure{WaveNet Ground/Test}
+            \item \alert{WaveNet Transcribed/Test}
+            \item \structure{WaveNet Transcribed/Transformer}
+        \end{itemize}
+        \yfig{width=0.5\textwidth}{figure/wavenettrans_test.png}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[noframenumbering]
+    \frametitle{Listening Tests}
+    \begin{itemize}
+        \item Presented users with two 20-second clips, \\
+            asked which clip sounded more like a real recording of piano playing
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Models {\scriptsize (Audio/MIDI)}:
+        \begin{itemize}
+            \item \structure{Ground Truth Recordings}
+            \item \structure{WaveNet Unconditioned}
+            \item \structure{WaveNet Ground/Test}
+            \item \structure{WaveNet Transcribed/Test}
+            \item \alert{WaveNet Transcribed/Transformer}
+        \end{itemize}
+        \yfig{width=0.8\textwidth}{figure/wavenettrans_transformer.png}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Listening Tests}
+    \begin{itemize}
+        \item Presented users with two 20-second clips, \\
+            asked which clip sounded more like a real recording of piano playing
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Results:
+        \begin{itemize}
+            \item 640 ratings were collected
+            % \item 640 ($= 128_{\substack{\text{\tiny pair-wise}\\\text{\tiny comparison}}} \times 5_{\text{\tiny source}}$) ratings on Likert scale
+                \yfig{width=0.8\textwidth}{figure/listening_test.png}
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Not a statistically significant difference
+            \begin{itemize}
+                \item \yculine{0.8}{200,200,200}{Ground Truth Recordings} \& \yculine{0.8}{127,195,217}{WaveNet Ground/Test}
+                \item \yculine{0.8}{200,200,200}{Ground Truth Recordings} \& \yculine{0.8}{255,200,0}{WaveNet Transcribed/Test}
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Conclusion}
+    \begin{itemize}
+        \item MAESTRO dataset
+        \begin{itemize}
+            \item A larger new dataset of piano performance
+            \item Used to train models in Wave2Midi2Wave
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Wave2Midi2Wave
+        \begin{itemize}
+            \item Architecture combining existing models
+            \item Able to generate piano performances like real recordings
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Future work
+        \begin{itemize}
+            \item Extend this approach to multiple simultaneous instruments
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+{\footnotesize
+    \yreference{unsrt}{maestro}
+}
+
+
+
+\begin{frame}[noframenumbering]
+    \frametitle{Dataset}
+    \yhead{Alignments}\\
+    \yhspace{1.6} \yitemsquare
+    \yvspace{-1}
+    \begin{yalign*}
+        \yhspace{5.25}
+        \begin{rcases*}
+            \text{MIDI files \ {\scriptsize Recorded by Disklaviers themselves}} \\
+            \text{WAV audio \ {\scriptsize Captured with conventional recording equipment}}
+        \end{rcases*}
+        \text{\small Independent}
+    \end{yalign*}
+    \yvspace{-0.5}
+    \begin{itemize}
+        \yinner{1}
+        \item Approach: Globally minimizing the distance \\
+            between CQT frames from real audio and synthesized MIDI
+    \end{itemize}
+    \yvspace{0.5}
+    %
+    \yhead{Dataset Spliting}
+    \begin{itemize}
+        \yinner{1}
+        \item Train/Validation/Test $\approx$ 80/10/10 \%
+        \item No composition should appear in more than one split
+        \item The validation/test split should contain a variety of compositoins
+    \end{itemize}
+    \yvspace{-0.5}
+    %
+    \yfig{width=0.7\textwidth}{figure/stat_maestro.png}
+\end{frame}
+
+
+\begin{frame}[noframenumbering]
+    \frametitle{Data Augmentation on Transcription Model}
+    \begin{itemize}
+        \item Model: Onsets and Frames \cite{onsetandframes} \ {\small (with several modifications)}
+        \item Training: MAESTRO training set (with audio augmentation)
+            \yfig{width=0.6\textwidth}{figure/audio_augmentation_params.png}
+        \item Evaluation: MAPS configuration 2 test set, MAESTRO test set
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Effects of audio augmentation:
+        \begin{itemize}
+            \item was important on the MAPS dataset
+            % \begin{itemize}
+            %     \item Audio augmentation made the model more robust \\
+            %         to differences in recording environment and piano qualities
+            % \end{itemize}
+            \item made results slightly worse on MAESTRO dataset
+        \end{itemize}
+            \yfig{width=0.8\textwidth}{figure/audio_augmentation_comparison.png}
+    \end{itemize}
+\end{frame}
+
+
+\end{document}
