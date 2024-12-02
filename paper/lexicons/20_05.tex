@@ -1,0 +1,148 @@
+%%% 20.5 %%%
+
+\begin{frame}
+    \frametitle{20.5 Supervised Learning of Word Sentiment}
+    \begin{itemize}
+        \item Online review（スコア，テキストの組）からlexiconを構成
+        \begin{itemize}
+            \item 高評価のレビューほどpositiveなwordが現れやすい
+            \item 多段評価なので分布が得られる
+            \yvspace{-0.25}
+            \yfig{width=0.8\textwidth}{figure/05/fig_20_9.png}
+            \item word $w$と評価$c$の関連度を計算
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{columns}
+        \begin{column}[T]{0.05\textwidth}
+            \relax
+        \end{column}
+        %
+        \begin{column}[T]{0.45\textwidth}
+            \yvspace{-0.5}
+            \footnotesize
+            \begin{align*}
+                p(w \mid c) &= \frac{count(w, c)}{\sum_{w \in c} count(w, c)} \\
+                &\ygraytxt{= \frac{\mathrm{Count}(c)}{\mathrm{Total}(c)} = \mathrm{Pr}_{\mathrm{IMDB}}(w \mid c)}
+            \end{align*}
+            \yvspace{-0.75}
+            \begin{yalign*}
+                PottsScore(w) &= \frac{p(x \mid c)}{\sum_{c} p(w \mid c)} \\
+                &\ygraytxt{= \mathrm{Pr}_{\mathrm{IMDB}}(c \mid w)}
+            \end{yalign*}
+        \end{column}
+        %
+        \begin{column}[T]{0.45\textwidth}
+            \yvspace{-1.5}
+            \yfigcap{width=\textwidth}{figure/05/potts_table.png}{\scriptsize $w=\textrm{`disappointing'}$の場合 \ycite{Potts, 2011}}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{20.5 Supervised Learning of Word Sentiment}
+    \yvspace{-0.5}
+    \begin{itemize}
+        \item word$w$と評価$c$の関連度をvisualize（Potts diagram）
+        \begin{itemize}
+            \item 曲線の形をaffective meaningのタイプと見做す
+        \end{itemize}
+    \end{itemize}
+    \yvspace{-1}
+    %
+    \begin{columns}
+        \begin{column}[T]{0.5\textwidth}
+            \yfig{width=\textwidth}{figure/05/fig_20_10.png}
+            \yvspace{-0.5}
+            \begin{itemize}
+                \footnotesize
+                \item strongly positive/negative：J-shape
+                \item weakly positive/negative：hump-shape
+            \end{itemize}
+        \end{column}
+        %
+        \begin{column}[T]{0.5\textwidth}
+            \yfig{width=0.975\textwidth}{figure/05/fig_20_11.png}
+            \yvspace{-0.5}
+            \begin{itemize}
+                \yinner{0.5}
+                \footnotesize
+                \item empahtics：J/U-shape
+                \item attenuators：hump-shape
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{20.5 Supervised Learning of Word Sentiment}
+    \yhead{20.5.1 Log Odds Ration Informative Dirichlet Prior}
+    \yvspace{0.25}
+    %
+    \begin{itemize}
+        \yinner{1}
+        \item 1つのカテゴリでのみ使用される 特徴的なwordの検出
+            \yvspace{0.25}
+        \item word $w$は コーパス$i, j$のどちらに より現れるか
+        \begin{itemize}
+            \yinner{1}
+            \item 対数オッズ比 {\footnotesize（\ $\mathrm{odds}= p/(1-p)$\ ）}：
+            \begin{yalign*}
+                \mathrm{lor}(w) &= \log\left(\frac{p^{i}(w)}{1-p^{i}(w)}\right) - \log\left(\frac{p^{j}(w)}{1-p^{j}(w)}\right) \\
+                &= \log\left(\frac{f^{i}_{w}}{n^i-f^{i}_{w}}\right) - \log\left(\frac{f^{j}_{w}}{n^j-f^{j}_{w}}\right)
+            \end{yalign*}
+            where $n^i$：コーパス$i$の総word数 \\
+            \yhspace{2.25} $f^{i}_{w}$：コーパス$i$内のword $w$の数 \\
+            \yvspace{0.5}
+            %
+            \item 高頻出・低頻出単語への対応 \\
+            $\to$ log odds ratio informative Dirichlet prior \ycite{Monroe, 2008}
+        \end{itemize}
+    \end{itemize}
+    %
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{20.5 Supervised Learning of Word Sentiment}
+    \begin{itemize}
+        \item large background corpusを考慮：
+        {\small
+            \begin{align*}
+                \hat{\delta}^{(i-j)}_{w} =
+                    \log\left(\frac{f^{i}_{w} + \yorangetxt{\alpha_{w}}}{n^i + \yorangetxt{\alpha_{0}}-(f^{i}_{w} + \yorangetxt{\alpha_{w}})}\right)
+                    - \log\left(\frac{f^{j}_{w} + \yorangetxt{\alpha_{w}}}{n^j + \yorangetxt{\alpha_{0}}-(f^{j}_{w} + \yorangetxt{\alpha_{w}})}\right)
+            \end{align*}
+        }
+        {\footnotesize
+            where $\alpha_0$：background corpusの総word数 \\
+                \yhspace{2.8} $\alpha_w$：background corpus内のword $w$の数
+        }
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item 分散を近似：
+        {\small
+            \begin{align*}
+                \sigma^{2}\left(\hat{\delta}^{(i-j)}_{w}\right) \approx \frac{1}{f^{i}_{w} + \alpha_{w}} + \frac{1}{f^{j}_{w} + \alpha_{w}}
+            \end{align*}
+        }
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item z変換：
+        {\small
+            \begin{yalign*}
+                \frac{\hat{\delta}^{(i-j)}_{w}}{\sqrt{\sigma^{2}\left(\hat{\delta}^{(i-j)}_{w}\right)}}
+            \end{yalign*}
+        }
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{20.5 Supervised Learning of Word Sentiment}
+    \yfigcap{width=0.95\textwidth}{figure/05/fig_20_12.png}{$\bigstar$1/$\bigstar$5のレビューと関連するword \ycite{Jurafsky+, 2014}}
+\end{frame}

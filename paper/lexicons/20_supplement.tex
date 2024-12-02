@@ -1,0 +1,53 @@
+%%% 補足 %%%
+
+\begin{frame}[noframenumbering]
+    \frametitle{20.5.1 Log Odds Ratio Informative Dirichlet Prior}
+    \begin{itemize}
+        \item 尤度関数：
+        \begin{yalign*}
+            \bm{y} \sim \mathrm{Multinomial}(n, \bm{\pi})
+        \end{yalign*}
+        %
+        \begin{itemize}
+            % \item $n$：総word数
+            \item $\bm{\pi} = {}^t[\pi_1 \cdots \pi_m]$; \ $\pi_i$：word $w_i$の出現確率 \ $(\, \sum \pi_i = 1 \,)$
+            \item $\bm{y} = {}^t[y_1 \cdots y_m]$; \\
+                $y_i$：corpus $\bm{y}$における word $w_i$の出現回数 \ $(\, \sum y_i = n \,)$
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item 事前分布：
+        \begin{yalign*}
+            \bm{\pi} \sim \mathrm{Dirichlet}(\bm{\alpha})
+        \end{yalign*}
+        %
+        \begin{itemize}
+            \item $\bm{\alpha} = {}^t[\alpha_1 \cdots \alpha_m]$; \\
+                $\alpha_i$：background corpusにおける word $w_i$の出現回数$+1$
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item 事後分布：
+        \begin{yalign*}
+            \hat{\bm{\pi}} &\sim \mathrm{Dirichlet}(\bm{y} + \bm{\alpha}) \\
+            \therefore \hat{\bm{\pi}} &= \frac{1}{n + \sum_{i} \alpha_i}(\bm{y} + \bm{\alpha})
+        \end{yalign*}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[noframenumbering]
+    \frametitle{20.5.1 Log Odds Ratio Informative Dirichlet Prior}
+    対数オッズ比
+    \begin{align*}
+        \log{\mathrm{OR}} = \log\left(\frac{p_{i} / (1 - p_{i})}{p_{j} / (1 - p_{j})}\right) = \log\left(\frac{a/b}{c/d}\right)
+    \end{align*}
+    の分散$V(\log{\mathrm{OR}})$は
+    \begin{align*}
+        V(\log{\mathrm{OR}}) &\approx \frac{1}{a} + \frac{1}{b} + \frac{1}{c} + \frac{1}{d} \\
+        &= \frac{1}{p_{i}} + \frac{1}{1-p_{i}} + \frac{1}{p_{j}} + \frac{1}{1-p_{j}}
+    \end{align*}
+    で近似される．
+\end{frame}

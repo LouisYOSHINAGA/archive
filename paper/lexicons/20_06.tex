@@ -1,0 +1,28 @@
+%%% 20.6 %%%
+
+\begin{frame}
+    \frametitle{20.6 Using Lexicons for Sentiment Recognition}
+    \begin{itemize}
+        \item lexiconを用いた sentiment analysisの改善
+        \yvspace{0.1}
+        \begin{itemize}
+            \item 十分な学習データがない場合
+                \yvspace{0.2}
+            \item 文章内のpositive/negative wordの割合から判定
+                \yvspace{0.25}
+            %
+            \begin{yalign*}
+                &f^{+} = \sum_{w \, \mathrm{s.t} \, w \in \mathrm{positive\,lexicon}} \theta_{w}^{+}\ count(w) \\
+                &f^{-} = \sum_{w \, \mathrm{s.t} \, w \in \mathrm{negative\,lexicon}} \theta_{w}^{-}\ count(w) \\
+                &sentiment = \begin{dcases}
+                    + & \mathrm{if} \ \frac{f^{+}}{f^{-}} > \lambda \\
+                    - & \mathrm{if} \ \frac{f^{-}}{f^{+}} > \lambda \\
+                    \,0 & \mathrm{otherwise}
+                \end{dcases}
+            \end{yalign*}
+            where \, $\theta_{w}^{+}, \theta_{w}^{-}$：weights \\
+            \yvspace{0.25}
+            \yhspace{3.0} $\lambda$：threshold
+        \end{itemize}
+    \end{itemize}
+\end{frame}

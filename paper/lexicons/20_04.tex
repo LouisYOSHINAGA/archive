@@ -1,0 +1,160 @@
+%%% 20.4 %%%
+
+\begin{frame}
+    \frametitle{20.4 Semi-supervised Induction of Affect Lexicons}
+    \yvspace{0.25}
+    \yhead{20.4.1 Semantic Axis Method}
+    \begin{enumerate}
+        \yinner{1}
+        \item seed wordsを人手で選択
+        \begin{description}
+            \yinner{-2.25}
+            \item[(1)] single large seed lexiconを使用
+            \item[(2)] 分野ごとにseed wordsを使い分ける
+        \end{description}
+        \yvspace{-0.25}
+        \yfigcap{width=0.7\textwidth}{figure/04/seed_words.png}{分野によるseed words例 \ycite{Hamilton+, 2016}}
+        \yvspace{0.75}
+        %
+        \item 埋め込み空間での計算
+        \begin{itemize}
+            \item seed wordsを埋め込み，重心$\bm{V}^{+}, \bm{V}^{-}$，semantic axis $\bm{V}_{axis}$を計算
+            \yvspace{-0.25}
+            {\footnotesize
+                \begin{align*}
+                    \bm{V}^{+} = \frac{1}{n} \sum_{1}^{n} E(w_{i}^{+}), \quad
+                    \bm{V}^{-} = \frac{1}{m} \sum_{1}^{m} E(w_{i}^{-}), \quad
+                    \bm{V}_{axis} = \bm{V}^{+} - \bm{V}^{-}
+                \end{align*}
+            }
+        \end{itemize}
+    \end{enumerate}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{20.4 Semi-supervised Induction of Affect Lexicons}
+    \begin{itemize}
+        \item seed wordsを埋め込み，重心$\bm{V}^{+}, \bm{V}^{-}$，semantic axis $\bm{V}_{axis}$を計算
+        \yvspace{-0.25}
+        {\footnotesize
+            \begin{align*}
+                \bm{V}^{+} = \frac{1}{n} \sum_{1}^{n} E(w_{i}^{+}), \quad
+                \bm{V}^{-} = \frac{1}{m} \sum_{1}^{m} E(w_{i}^{-}), \quad
+                \bm{V}_{axis} = \bm{V}^{+} - \bm{V}^{-}
+            \end{align*}
+        }
+        \item word $w$のスコアを計算
+        {\footnotesize
+            \begin{yalign*}
+                \mathrm{score}(w) = \cos(E(w), \bm{V}_{axis}) = \frac{E(w) \cdot \bm{V}_{axis}}{\|E(w)\| \|\bm{V}_{axis}\|}
+            \end{yalign*}
+        }
+        \yvspace{-0.25}
+        \yfig{width=0.875\textwidth}{figure/04/axis.png}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{20.4 Semi-supervised Induction of Affect Lexicons}
+    \yhead{20.4.2 Label Propagation}
+    \begin{enumerate}
+        \yinner{1}
+        \item グラフ定義
+        \begin{itemize}
+            \item node：word embedding $\bm{w}$，$k$個の近傍nodeと接続
+            \item edge：node $\bm{w}_i$, $\bm{w}_j$間の重み$E_{i,j}$
+            \begin{yalign*}
+                E_{i,j} = \arccos\left(- \frac{\bm{w}_{i}^{\top} \bm{w}_{j}}{\|\bm{w}_{i}\| \|\bm{w}_{j}\|} \right)
+            \end{yalign*}
+        \end{itemize}
+        %
+        \item seed set定義
+        \item seed setからpolarityを伝播  \label{label_prop_propagate}
+        \begin{itemize}
+            \item seed setを起点に edgeの重みに従ってrandom walk
+        \end{itemize}
+        \yfig{width=0.5\textwidth}{figure/04/fig_20_7a.png}
+    \end{enumerate}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{20.4 Semi-supervised Induction of Affect Lexicons}
+    \begin{enumerate}
+        \setcounter{enumi}{3}
+        \item word scoreの計算  \label{label_prop_word_score}
+        \begin{itemize}
+            \item random walkの訪問回数からスコアを計算
+            \begin{yalign*}
+                \mathrm{score}^{+}(w_{i}) = \frac{\mathrm{rawscore}^{+}(w_i)}{\mathrm{rawscore}^{+}(w_i) + \mathrm{rawscore}^{-}(w_i)}
+            \end{yalign*}
+            \yvspace{-0.25}
+            \yfig{width=0.5\textwidth}{figure/04/fig_20_7b.png}
+        \end{itemize}
+        \yvspace{0.5}
+        %
+        \item スコアの信頼度の計算
+        \begin{itemize}
+            \item word scoreはseed set依存
+            \item seed setの部分集合をrandomに選びpropagation (\ybluetxt{\ref{label_prop_propagate}}-\ybluetxt{\ref{label_prop_word_score}}) を複数回実行
+            \item 各wordのスコアの標準偏差を計算
+        \end{itemize}
+    \end{enumerate}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{20.4 Semi-supervised Induction of Affect Lexicons}
+    \yhead{20.4.3 Other Methods}
+    \begin{itemize}
+        \yinner{1}
+        \item seed setとの\underline{類似度}の尺度
+    \end{itemize}
+    \yvspace{0.25}
+    %
+    \begin{itemize}
+        \yinner{1}
+        \item and, butによる形容詞の並列関係 \ycite{Hatzivassiloglou\,\&\,McKeown, 1997}
+        \begin{itemize}
+            \yinner{1}
+            \item and：同じpolarity
+            \begin{itemize}
+                \yinner{1}
+                \item fair and legitimate / corrupt and brutal
+            \end{itemize}
+            \item but：逆のpolarity
+            \begin{itemize}
+                \yinner{1}
+                \item fair but brutal
+            \end{itemize}
+        \end{itemize}
+    \end{itemize}
+    \yvspace{-0.25}
+    %
+    \begin{itemize}
+        \yinner{1}
+        \item 同一の語幹の形容詞のmorphological negation
+        \begin{itemize}
+            \yinner{1}
+            \item \textit{un-}, \textit{im-}, \textit{-less}がつくと逆のpolarity
+            \begin{itemize}
+                \yinner{1}
+                \item adequate/inadequate, \ thoughtful/thoughtless
+            \end{itemize}
+        \end{itemize}
+    \end{itemize}
+    \yvspace{-0.25}
+    %
+    \begin{itemize}
+        \yinner{1}
+        \item WordNetのsynonim/antonym
+        \begin{itemize}
+            \yinner{1}
+            \item synonim：同じpolarity
+            \item antonym：逆のpolarity
+        \end{itemize}
+        \quad $\to$ SentiWordNet \ycite{Baccianella+, 2010}
+    \end{itemize}
+\end{frame}

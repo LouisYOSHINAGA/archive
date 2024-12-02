@@ -1,0 +1,110 @@
+%%% 20.1 %%%
+\newcommand{\ulc}[2]{\textcolor[RGB]{#1}{\underline{\textcolor{black}{#2}}}}
+
+\begin{frame}
+    \frametitle{20.1 Defining Emotion}
+    \begin{itemize}
+        \item \yorangetxt{emotion}
+        \begin{itemize}
+            \item relatively brief episode of response to the evaluation of an external \\
+                or internal event as being of major significance \ycite{Scherer, 2000}
+            \item \textit{angry}, \textit{sad}, \textit{joyful}, \textit{fearful}, \textit{ashamed}, \textit{proud}, \textit{elated}, \textit{desperate}
+            \yvspace{0.75}
+            %
+            \item emotionが判ると何が嬉しいのか：
+            \begin{itemize}
+                \item 言語処理タスク改善の可能性（学習支援システム，レビュー，医療）
+            \end{itemize}
+        \end{itemize}
+    \end{itemize}
+    \yvspace{0.75}
+    %
+    \begin{itemize}
+        \item emotionの計算モデル
+        \begin{enumerate}
+            \item basic emotionの組み合わせ
+            \item 3次元 (VAD) 空間
+        \end{enumerate}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{20.1 Defining Emotion}
+    \yhead{Basic Emotionの組み合わせ}
+    %
+    \begin{itemize}
+        \yinner{1}
+        \item emotionを 基本単位（basic emotion）の組み合わせとして表現
+    \end{itemize}
+    \yvspace{0.25}
+    %
+    \begin{itemize}
+        \item 6 basic emotions \ycite{Ekman, 1999}
+        \begin{itemize}
+            \item surprize, happiness, anger, fear, disgust, sadness
+        \end{itemize}
+    \end{itemize}
+    \yvspace{-0.75}
+    %
+    \begin{columns}
+        \begin{column}[T]{0.5\textwidth}
+            \yvspace{0.25}
+            \begin{itemize}
+                \yinner{0.4}
+                \item 8 basic emotions \ycite{Plutchik, 1980}
+                \begin{itemize}
+                    \yinner{0.4}
+                    \item \ulc{220,230,0}{joy} - \ulc{0,0,255}{sadness}
+                    \item \ulc{255,0,0}{anger} - \ulc{0,128,0}{fear}
+                    \item \ulc{0,255,0}{trust} - \ulc{255,0,255}{disgust}
+                    \item \ulc{255,165,0}{anticipation} - \ulc{0,191,255}{surprize}
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+        %
+        \begin{column}[T]{0.5\textwidth}
+            \yvspace{2}
+            \yfig{width=0.875\textwidth}{figure/01/fig_20_2.png}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{20.1 Defining Emotion}
+    \yhead{3次元 (V\,A\,D) 空間}
+    \yvspace{0.25}
+    %
+    \begin{itemize}
+        \item emotionをV, A, Dを軸とする3次元空間上の点として表現
+        \begin{itemize}
+            \item \underline{V}alence（感情価）：刺激の心地よさ
+                \yvspace{0.25}
+            \item \underline{A}rousal（覚醒度）：刺激による感情の強さ
+                \yvspace{0.25}
+            \item \underline{D}ominance（支配性）：刺激に支配される度合い
+            \begin{itemize}
+                \item Dominanceを除いてV,Aの2次元とする場合も
+            \end{itemize}
+        \end{itemize}
+        %
+        \yvspace{-0.5}
+        \begin{columns}
+            \begin{column}[T]{0.575\textwidth}
+                \yhspace{-1.5}
+                \begin{itemize}
+                    \item sentiment $\subset$ emotion
+                    \begin{itemize}
+                        \item valence = sentiment
+                        \item emotionはsentimentの一般化
+                    \end{itemize}
+                \end{itemize}
+            \end{column}
+            %
+            \begin{column}[T]{0.375\textwidth}
+                \yfigcap{width=\textwidth}{figure/01/russell_circle.png}{\scriptsize Russellの円環モデル \ycite{Russell, 1980}}
+            \end{column}
+        \end{columns}
+    \end{itemize}
+\end{frame}

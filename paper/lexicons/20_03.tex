@@ -1,0 +1,119 @@
+%%% 20.3 %%%
+
+\begin{frame}
+    \frametitle{20.3 Creating Affect Lexicons by Human Labeling}
+    \yvspace{-0.25}
+    \begin{itemize}
+        \item lexicon構成手法：人手でラベリング
+        \begin{itemize}
+            \item crowdsourcing：小さなタスクに分割，大人数のアノテータに振り分け
+        \end{itemize}
+    \end{itemize}
+    \yvspace{0.25}
+    %
+    \yhead{NRC Emotion Lexicon（EmoLex）}\ycite{Mohammad\,\&\,Turney, 2013}
+    \begin{enumerate}
+        \yinner{1}
+        \item 同義語選択
+        \begin{itemize}
+            \yinner{0.5}
+            \item アノテータのword sense検証，問題は自動生成
+        \end{itemize}
+        \yvspace{-0.25}
+        %
+        \begin{description}
+            \yinner{-3.2}
+            \footnotesize
+            \item[例] \texttt{Which word is closest in meaning (most related) to startle?} \\
+                \texttt{automobile} / \texttt{shake} / \texttt{honesty} / \texttt{entertain}
+        \end{description}
+        %
+        \item 8 basic emotionsとの関連度の回答
+        \begin{itemize}
+            \item 関連度：\textit{not}, \textit{weakly}, \textit{moderately}, \textit{strongly}
+        \end{itemize}
+    \end{enumerate}
+    \yvspace{-0.25}
+    %
+    \begin{columns}
+        \begin{column}[T]{0.7\textwidth}
+            \begin{itemize}
+                \yinner{1.25}
+                % \item 集計，外れ値を除外
+                \item 多数決で関連度を決定
+                \item 関連度よりスコア$\in \{0, 1\}$を決定
+                \begin{itemize}
+                    \yinner{1}
+                    \item \textit{not}, \textit{weakly} $\mapsto 0$
+                    \item \textit{moderately}, \textit{strongly} $\mapsto 1$
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+        %
+        \begin{column}[T]{0.3\textwidth}
+            \yvspace{-1}
+            \yfig{width=\textwidth}{figure/02/emolex.png}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{20.3 Creating Affect Lexicons by Human Labeling}
+    \yvspace{-0.25}
+    \begin{itemize}
+        \item lexicon構成手法：人手でラベリング
+        \begin{itemize}
+            \item crowdsourcing：小さなタスクに分割，大人数のアノテータに振り分け
+        \end{itemize}
+    \end{itemize}
+    \yvspace{0.25}
+    %
+    \yhead{NRC VAD Lexicon} \ycite{Mohammad, 2018}
+    \begin{enumerate}
+        \yinner{1.25}
+        \item $N$個{\footnotesize（通常$N=4$）}のwordの中からbest/worstを選択
+        \begin{description}
+            \yinner{0.25}
+            \footnotesize
+            \item[例：Valence] \
+            \begin{itemize}
+                \yinner{-5.75}
+                \scriptsize
+                \item Which of the four words below is associated with the MOST happiness / pleasure / positiveness / satisfaction / contentedness / hopefulness OR LEAST unhappiness / annoyance / negativeness / dissatisfaction / melancholy / despair ?
+                    \yvspace{0.25}
+                \item Which of the four words below is associated with the LEAST happiness / pleasure / positiveness / satisfaction / contentedness / hopefulness OR MOST unhappiness / annoyance / negativeness / dissatisfaction / melancholy / despair ?
+            \end{itemize}
+        \end{description}
+    \end{enumerate}
+    \yvspace{-0.25}
+    %
+    \begin{itemize}
+        \yinner{1}
+        \item best-worst scaling
+        \begin{itemize}
+            \yinner{1}
+            \item $(\textrm{wordのスコア}) = (\textrm{bestに選ばれた割合}) - (\textrm{worstに選ばれた割合})$
+        \end{itemize}
+    \end{itemize}
+    \yvspace{-0.75}
+    %
+    \begin{columns}
+        \begin{column}[T]{0.5\textwidth}
+            \begin{itemize}
+                \yinner{1.4}
+                \item 評価：split-half reliability
+                \begin{itemize}
+                    \yinner{1}
+                    \item コーパスを2分割 \\
+                        相関を計算
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+        %
+        \begin{column}[T]{0.5\textwidth}
+            \yvspace{-0.5}
+            \yfig{width=0.95\textwidth}{figure/02/fig_20_4.png}
+        \end{column}
+    \end{columns}
+\end{frame}

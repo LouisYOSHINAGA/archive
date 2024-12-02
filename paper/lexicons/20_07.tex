@@ -1,0 +1,75 @@
+%%% 20.7 %%%
+
+\begin{frame}
+    \frametitle{20.7 Using Lexicons for Affect Recognition}
+    \begin{itemize}
+        \item 大規模データセット
+        \begin{itemize}
+            \item 何かしらの修正が必要
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item 例：言語情報と個性・性別・年齢の関連 \ycite{Schwartz+, 2013}
+        \begin{itemize}
+            \item Facebookの投稿{\footnotesize（700million words）}をn-gram（$n=1,2,3$）の形で使用
+                \yvspace{0.2}
+            \item 1\%以上のユーザに使用されているword・phraseのみ使用
+                \yvspace{0.2}
+            \item 2-gram, 3-gram：PMIが充分大きいphraseのみ使用
+                \begin{yalign*}
+                    \mathrm{pmi}(phrase) = \log \frac{p(phrase)}{\displaystyle\prod_{w \in phrase} p(w)}
+                \end{yalign*}
+            \item 尤度を計算：
+                \begin{yalign*}
+                    \yhspace{4}
+                    p(phrase \mid subject) = \frac{\mathrm{freq}(phrase, subject)}{\displaystyle\sum_{phrase' \in \mathrm{vocab}(subject)} \mathrm{freq}(phrase', subject)}
+                \end{yalign*}
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{20.7 Using Lexicons for Affect Recognition}
+    \begin{itemize}
+        \item training dataがsparser，test setに似ていない
+        \begin{itemize}
+            \item lexicon $L$を利用してdocument $x$の特徴量$f_L$を作成
+            %
+            \begin{columns}
+                \begin{column}[T]{0.05\textwidth}
+                    \relax
+                \end{column}
+                %
+                \begin{column}[T]{0.80\textwidth}
+                    \yfig{width=0.8\textwidth}{figure/07/feature.png}
+                    \yvspace{0.5}
+                \end{column}
+                %
+                \begin{column}[T]{0.05\textwidth}
+                    \relax
+                \end{column}
+            \end{columns}
+            \yvspace{0.25}
+            %
+            \item 特性関数の条件として使用：
+                {\small
+                    \begin{yalign*}
+                        \yhspace{2}
+                        f_{L}(c, x) = \begin{cases}
+                                1 & \mathrm{if} \, \exists w, w \in L \ \&\ w \in x \ \&\ class = c \\
+                                0 & \mathrm{otherwise}
+                        \end{cases}
+                    \end{yalign*}
+                }
+            %
+            \item 数え上げの条件として使用：
+                {\small
+                    \begin{yalign*}
+                        f_{L} = \sum_{w \in L} \theta_{w}^{L} \ count(w)
+                    \end{yalign*}
+                }
+        \end{itemize}
+    \end{itemize}
+\end{frame}
