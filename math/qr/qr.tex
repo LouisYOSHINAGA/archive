@@ -1,0 +1,661 @@
+\documentclass[dvipdfmx]{jsarticle}
+\usepackage[top=20truemm, bottom=20truemm, left=20truemm, right=20truemm]{geometry}
+\usepackage{amsmath, amssymb, mathtools, bm}
+\usepackage{ascmac}
+\usepackage{framed}
+\usepackage{xcolor}
+\usepackage{algorithm, algorithmic}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{pxjahyper}
+\usepackage{comment}
+
+\usepackage{amsthm}
+\theoremstyle{definition}
+\newtheorem{definition}{定義}[section]
+\newtheorem*{definition*}{定義}
+\newtheorem{theorem}[definition]{定理}
+\newtheorem*{theorem*}{定理}
+\newtheorem{proposition}[definition]{命題}
+\newtheorem*{proposition*}{命題}
+\newtheorem{example}[definition]{例}
+\newtheorem*{example*}{例}
+\newtheorem{question}{問}[section]
+
+\newcommand{\diag}[1]{\mathrm{diag}(#1)}
+\newcommand{\tp}[1]{{}^{t}#1}
+\newcommand{\hs}[1]{\hspace{#1em}}
+\newcommand{\hv}[3]{[#1 \hs{0.8} #2 \hs{0.8} #3]}
+\newcommand{\tpv}[3]{\tp{[#1 \hs{0.8} #2 \hs{0.8} #3]}}
+
+
+\title{QR分解}
+\author{吉永 塁 \thanks{情報工学専攻1年 \texttt{m1622047@edu.kit.ac.jp}}}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    QR分解の理解を目標として，それに関する内容を中心にまとめました．
+    線型代数の予習復習として使用していただければ幸いです．
+\end{abstract}
+
+
+%%%===============================================
+\section{ベクトル・行列}  \label{sec_vecmat}
+%%%===============================================
+
+%%%-----------------------------------------------
+\subsection{ベクトル}  \label{subsec_vec}
+%%%-----------------------------------------------
+\begin{definition}[線型空間・ベクトル]
+    集合$\bm{V} \neq \emptyset$に次のような2つの演算が定められ，以下に示す公理\ref{vs_ass}-\ref{vs_one}
+    \footnote{
+        この公理は異なる形で記述されることがありますが，ここで示すものと等価であることが示されます．
+    }
+    を満たすとき，$\bm{V}$を$\bm{K}$上の線型空間
+    \footnote{$\bm{K}$上のベクトル空間，$\bm{K}$-ベクトル空間とも呼ばれます．}
+    という．
+    \begin{description}
+        \setlength{\leftskip}{1em}
+        \item[加法]
+            任意の$\bm{x}, \bm{y} \in \bm{V}$に対して，$\bm{x}$と$\bm{y}$の和と呼ばれる$\bm{V}$の元$\bm{x} + \bm{y}$を対応させる演算が定まる．
+            この演算を加法といい，次の4つの公理を満たす．（$\bm{x}, \bm{y}, \bm{z} \in \bm{V}$）
+            \begin{enumerate}
+                \setlength{\leftskip}{2em}
+                \item $(\bm{x} + \bm{y}) + \bm{z} = \bm{x} + (\bm{y} + \bm{z})$ \ （結合法則）
+                    \label{vs_ass}
+                \item $\bm{x} + \bm{y} = \bm{y} + \bm{x}$ \ （交換法則）
+                    \label{vs_com}
+                \item $\bm{0} + \bm{x} = \bm{x} + \bm{0} = \bm{x}$を満たす零元
+                    \footnote{零ベクトル，ゼロ元，ゼロベクトルとも呼ばれます．}\
+                    $\bm{0} \in \bm{V}$が存在する．
+                    \label{vs_zero}
+                \item $\bm{x} + (-\bm{x}) = (-\bm{x}) + \bm{x} = \bm{0}$を満たす$\bm{x}$の逆元
+                    \footnote{逆ベクトルとも呼ばれます．}\
+                    $-\bm{x} \in \bm{V}$が存在する．
+                    \label{vs_inv}
+            \end{enumerate}
+        \item[スカラー倍]
+            任意の$\bm{x} \in \bm{V}$と任意の$a \in \bm{K}$に対し，$\bm{x}$の$a$倍と呼ばれる$\bm{V}$の元$a\bm{x}$を対応させる演算が定まる．
+            この演算をスカラー倍といい，次の4つの公理を満たす．（$\bm{x}, \bm{y} \in \bm{V}, \ a, b \in \bm{K}$）
+            \begin{enumerate}
+                \setcounter{enumi}{4}
+                \setlength{\leftskip}{2em}
+                \item $(a + b) \bm{x} = a \bm{x} + b \bm{x}$
+                    \label{vs_dist_vec}
+                \item $a(\bm{x} + \bm{y}) = a \bm{x} + a \bm{y}$
+                    \label{vs_dist_coef}
+                \item $(ab) \bm{x} = a (b \bm{x})$
+                    \label{vs_ass_coef}
+                \item $1 \bm{x} = \bm{x}$
+                    \label{vs_one}
+            \end{enumerate}
+    \end{description}
+    また，$\bm{V}$の元をベクトルという．
+\end{definition}
+%%%
+\begin{example}
+    \label{vs_ex_rn}
+    実数を成分として持つ$n$次列ベクトルの全体
+    \begin{align*}
+        \mathbb{R}^n = \left\{ \begin{bmatrix} a_1 \\ \vdots \\ a_n \end{bmatrix} \ \middle| \ a_1, \ldots, a_n \in \mathbb{R} \right\}
+    \end{align*}
+    は$\mathbb{R}$上の線型空間．
+\end{example}
+%%%
+突然線型空間なるものの定義から始まりましたが，よくわからなければ，ひとまず線型空間については飛ばしてもらうのでも良いと思います．
+とりあえずは$\bm{V} = \mathbb{R}^n$と読みかえて，
+ベクトルとは「$n$個の数を並べてひとまとめにしたもの（但しいくつかの条件を満たしている）」として読み進めてもらえば大丈夫です．
+
+また，以降では，$\bm{K} = \mathbb{R}$として$\mathbb{R}$上の線型空間に限定して話を進めます．
+%%%
+\begin{comment}
+\begin{example}
+    実数を成分として持つ$n$次正方行列の全体
+    \begin{align*}
+        \mathrm{M}_n(\mathbb{R}) = \{ A \mid A \text{は$n$次実正方行列} \}
+    \end{align*}
+    は$\mathbb{R}$上の線型空間．
+\end{example}
+%%
+\begin{example}
+    高々$n$次の実数係数多項式の全体
+    \begin{align*}
+        \mathbb{R}[x]_n = \left\{ \sum_{i=0}^{n} a_i x^k \ \middle| \ a_i \in \mathbb{R} \right\}
+    \end{align*}
+\end{example}
+%%
+\begin{example}
+    $n$階斉次線型微分方程式の解全体
+    \begin{align*}
+        \left\{ f(x) \in \mathbb{R}[x]_n \ \middle| \ \sum_{k=0}^{n} a_{k}(x) f^{k}(x) = 0 \right\}
+    \end{align*}
+\end{example}
+\end{comment}
+%%%
+\begin{definition}[基底]
+    $\mathbb{R}$上の線型空間$\bm{V}$において，ベクトルの組$\{ \bm{v}_1, \ldots, \bm{v}_n\}$がとれて，
+    任意の$\bm{v} \in \bm{V}$がこれらの線型結合$\bm{v} = c_1 \bm{v}_1 + \cdots + c_n \bm{v}_n$で一意に表されるとき，
+    ベクトルの組$\{ \bm{v}_1, \ldots, \bm{v}_n \}$を$\bm{V}$の基底という．
+    また，このとき$\bm{V}$は$n$次元であるといい，$\dim{\bm{V}} = n$と表記する．
+\end{definition}
+%%%
+\begin{definition}[内積]
+    任意の$\bm{x}, \bm{y} \in \bm{V}$に対して，$\mathbb{R}$の元$(\bm{x}, \bm{y})$を対応させる写像$\bm{V} \times \bm{V} \to \mathbb{R}$で，
+    次の公理\ref{ip_skewsym}-\ref{ip_posdef}を満たすものを内積という．
+    また，$(\bm{x}, \bm{y})$を$\bm{x}$と$\bm{y}$の内積
+    \footnote{
+        角括弧$\langle \cdot, \cdot \rangle$，
+        ブラケット表記$(\cdot \mid \cdot), \ \langle \cdot \mid \cdot \rangle$，
+        中置記号$\cdot$
+        などで内積を表記する場合もあります．
+    }
+    という．
+    \begin{enumerate}
+        \setlength{\leftskip}{2em}
+        \item $(\bm{x}, \bm{y}) = (\bm{y}, \bm{x})$ \ （対称性）
+            \label{ip_skewsym}
+        \item $(\bm{x}+\bm{y}, \bm{z}) = (\bm{x}, \bm{z}) + (\bm{y}, \bm{z})$ \ （線型性）
+            \label{ip_linear_add}
+        \item $(c\bm{x}, \bm{y}) = c(\bm{x}, \bm{y})$ \ （線型性）
+            \label{ip_linear_mul}
+        \item $(\bm{x}, \bm{x}) \geq 0$かつ$(\bm{x}, \bm{x}) = 0 \Leftrightarrow \bm{x} = \bm{0}$ \ （正定値性）
+            \label{ip_posdef}
+    \end{enumerate}
+\end{definition}
+%%%
+\begin{example}
+    \label{ip_ex_ei}
+    $\bm{x} = \tp{[x_1 \ \ldots \ x_n]}, \bm{y} = \tp{[y_1 \ \ldots \ y_n]} \in \mathbb{R}^n$に対し，
+    \begin{align*}
+        (\bm{x}, \bm{y}) \coloneqq \tp{\bm{x}} \bm{y} = \sum_{i=1}^{n} x_i y_i
+    \end{align*}
+    は内積の公理を満たす．
+    これを$\mathbb{R}^n$の標準内積という．
+\end{example}
+%%%
+\begin{definition}[直交・ノルム]
+    $\bm{x}, \bm{y} \in \bm{V}$に対して，$(\bm{x}, \bm{y}) = 0$が成り立つとき，$\bm{x}$と$\bm{y}$は直交するといい，$\bm{x} \bot \bm{y}$と表記する．
+    また，$\displaystyle \| \bm{x} \| \coloneqq \sqrt{(\bm{x}, \bm{x})}$を$\bm{x}$のノルムという．
+\end{definition}
+%%%
+\begin{definition}[正規直交基底]
+    $\bm{V}$の基底$\{ \bm{v}_1, \ldots, \bm{v}_n \}$が$(\bm{v}_i, \bm{v}_j) = \delta_{ij}$を満たすとき，
+    $\{ \bm{v}_1, \ldots, \bm{v}_n \}$を正規直交基底という．
+    ここで，$\delta_{ij}$はクロネッカーのデルタ$\displaystyle \delta_{ij} \coloneqq \begin{cases} 1 & (i = j) \\ 0 & (i \neq j) \end{cases}$．
+\end{definition}
+要するに，相異なるベクトルは互いに直交し，同じベクトル同士で内積をとると$1$になるようなベクトルで構成される基底を正規直交基底と呼ぶということです．
+
+
+%%%-----------------------------------------------
+\subsection{行列}  \label{subsec_mat}
+%%%-----------------------------------------------
+何かしらの特徴的な性質を持った行列には，よく名前が付けられます．
+ここではそのうち，今回登場するものについて，その定義と重要な性質を挙げておきます．
+%%%
+\begin{definition}[転置行列]
+    行列$A = [a_{ij}]$に対し，$[a_{ji}]$を行列$A$の転置行列といい，$\tp{A}$
+    \footnote{
+        $A^{T}$と表記される場合もあります．
+    }
+    と表記する．
+\end{definition}
+$A$の行と列を取り替えた行列が転置行列です．
+%%%
+\begin{definition}[正方行列]
+    $n \times n$型の行列を$n$次正方行列という．
+\end{definition}
+行列の次数が明らかな場合は単に正方行列と呼ばれることもあります．
+行数と列数が等しい正方形の行列が正方行列です．
+%%%
+\begin{definition}[上三角行列・対角行列]
+    正方行列$A = [a_{ij}]$で，$a_{ij} = 0 \ (i > j)$を満たすものを上三角行列という．
+    また，$a_{ij} = 0 \ (i \neq j)$を満たすものを対角行列という．
+    対角行列は$A$の対角成分$a_{11}, \cdots, a_{nn}$を用いて$\diag{a_{11}, \ldots, a_{nn}}$とも表記される．
+\end{definition}
+対角成分より左下の成分が全て$0$となるような行列が上三角行列，対角成分以外の成分が全て$0$となるような行列が対角行列です．
+一般に，上三角行列の和及び積は，再び上三角行列となります（問\ref{q_uptri}）．
+また，対角行列の$n$乗は各成分の$n$乗となります（問\ref{q_diagpow}）．
+対角行列は上三角行列の特殊な場合です（対角行列 $\subset$ 上三角行列）．
+%%%
+\begin{definition}[単位行列]
+    $n$次対角行列$A = [\delta_{ij}]$を単位行列といい，$E_n$
+    \footnote{
+        $I_n$と表記される場合もあります．
+    }
+    と表記する．
+\end{definition}
+次数が明らかなときは，添字を省略して$I, E$などと表記されることもあります．
+対角成分が全て$1$である対角行列が単位行列です．
+任意の$n$次正方行列$A$に対して，$AE = EA = A$が成り立ちます．
+%%%
+\begin{definition}[正則行列・逆行列]
+    $n$次正方行列$A$に対して，$AX = XA = E_n$なる$n$次正方行列$X$が存在するとき，$A$を正則行列，あるいは可逆行列という．
+    またこのときの$X$を$A$の逆行列といい，$A^{-1}$と表記する．
+\end{definition}
+逆行列を持つ行列が正則行列です．
+また，$n$次正則行列$A = \hv{\bm{a}_1}{\cdots}{\bm{a}_n}$は次の重要な性質を持ちます．
+$A$が正則行列 $\Leftrightarrow$ $\{ \bm{a}_1, \ldots, \bm{a}_n \}$が$\mathbb{R}^n$の基底．
+つまり，基底を構成するベクトルを並べてできる行列が正則行列です．
+%%%
+\begin{definition}[直交行列]
+    $n$次正方行列$A$で，$\tp{A} A = E_n$を満たすものを直交行列という．
+\end{definition}
+直交行列$A$は正則で，$\tp{A} = A^{-1}$が成り立ちます．
+また，$n$次直交行列$A = \hv{\bm{a}_1}{\cdots}{\bm{a}_n}$は，次の重要な性質を持ちます．
+$A$が直交行列 $\Leftrightarrow$ $\{ \bm{a}_1, \ldots, \bm{a}_n \}$が$\mathbb{R}^n$の正規直交基底．
+つまり，正規直交基底を構成するベクトルを並べてできる行列が直交行列です．
+
+
+
+%%%===============================================
+\section{Gram-Schmidtの正規直交化}  \label{sec_gson}
+%%%===============================================
+
+%%%-----------------------------------------------
+\subsection{正規直交化}  \label{subsec_gson}
+%%%-----------------------------------------------
+ある基底$\{ \bm{w}_1, \ldots, \bm{w}_n \}$を用いて，正規直交基底$\{ \bm{u}_1, \ldots, \bm{u}_n \}$を作る方法について見ていきます．
+次のような操作を考えます．
+%
+\begin{enumerate}
+    \item $\bm{v}_1 = \bm{w}_1$とおく．
+        \label{gson_v1}
+    \item $\bm{v}_1$と直交するようなベクトル$\bm{v}_2 = \bm{w}_2 + a_{12} \bm{v}_1$を考える． \\
+        $\bm{v}_2 \bot \bm{v}_1$より，
+        \begin{align}
+            (\bm{v}_2, \bm{v}_1) = 0
+            &\iff (\bm{w}_2, \bm{v}_1) + a_{12} (\bm{v}_1, \bm{v}_1) = 0
+            \qquad \therefore a_{12} = -\frac{(\bm{w}_2, \bm{v}_1)}{(\bm{v}_1, \bm{v}_1)}
+        \end{align}
+        \label{gson_v2}
+    \item \ref{gson_v2}と同様に，$k=3, \ldots, n$について，
+        $\bm{v}_1, \ldots, \bm{v}_{k-1}$に直交するようなベクトル$\bm{v}_k = \bm{w}_k + a_{1k} \bm{v}_1 + \cdots + a_{k-1\,k} \bm{v}_{k-1}$を考え，
+        $i = 1, \ldots, k-1$について，直交性$\bm{v}_k \bot \bm{v}_i$より係数$a_{ik}$を求める．
+        \label{gson_vi}
+    \item \ref{gson_v1}から\ref{gson_vi}で求めた$\bm{v}_1, \ldots, \bm{v}_n$について，
+        正規化$\displaystyle \bm{u} = \frac{\bm{v}}{\|\bm{v}\|}$を行う．
+        \label{gson_norm}
+\end{enumerate}
+%
+上の手順\ref{gson_v1}-\ref{gson_norm}によって正規直交基底を構成するベクトルの組$\bm{u}_1, \ldots, \bm{u}_n$が得られます．
+上の手順\ref{gson_v2}について，ここでは，$\bm{v}_1, \bm{v}_2$を直交させたいので，$\bm{v}_2$は$\bm{v}_1$成分を持たないベクトルにする必要があります．
+よって，式$\bm{v}_2 = \bm{w}_2 + a_{12}\bm{v}_1$は，「ベクトル$\bm{w}_2$から$\bm{v}_1$の成分を削り取ったものを$\bm{v}_2$とする」という意味合いの式です
+\footnote{
+    係数$a_{ij}$を直接書き下す方が記述は簡単になりますが（問\ref{q_coef}），分母分子の内積がそれぞれ何なのかを覚えておくのは中々大変だと思います．
+    今回のように，直交性からはじめて，方程式を作って係数を求めていく方法が，意味的にもわかりやすく，思い出しやすいのではないかと思います．
+}．
+これは手順\ref{gson_vi}についても同様です．
+また，このとき現れる係数$a_{ij}$の添字$i, j$について，
+$i$は削り取る成分$\bm{v}_i$の添字，$j$は求めるベクトル$\bm{v}_j$の添字をそれぞれ表しています．
+
+このように，ある基底から正規直交基底を作り出す操作をGram-Schmidtの正規直交化
+\footnote{
+    Schmidtの正規直交化，あるいは単に正規直交化とも呼ばれます．
+}
+と言います．
+今回は直交化を先に行い，正規化を最後にまとめて行いましたが，直交化と正規化を交互に行うことも可能です（問\ref{q_parallel}）．
+また，直交化を行う順番を変えると異なる正規直交基底が得られることに注意してください（問\ref{q_order}）．
+
+
+%%%-----------------------------------------------
+\subsection{具体例} \label{subsec_gson_ex}
+%%%-----------------------------------------------
+\begin{align*}
+    \bm{w}_1 = \begin{bmatrix} 1 \\ 0 \\ 1 \end{bmatrix},
+    \bm{w}_2 = \begin{bmatrix} 1 \\ 1 \\ 0 \end{bmatrix},
+    \bm{w}_3 = \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}
+\end{align*}
+により構成される$\mathbb{R}^3$の基底$\{ \bm{w}_1, \bm{w}_2, \bm{w}_3 \}$を正規直交化していきます．
+
+基準となる最初のベクトルはそのままの形で，$\bm{v}_1 = \bm{w}_1 = \tpv{1}{0}{1}$です（手順\ref{gson_v1}）．
+
+$\bm{v}_1$と直交するようなベクトル$\bm{v}_2$を，$\bm{v}_2 = \bm{w}_2 + a_{12}\bm{v}_1 = \tpv{1+a_{12}}{1}{a_{12}}$とおきます．
+直交性より$(\bm{v}_2, \bm{v}_1) = 2 a_{12} + 1 = 0$となり，$a_{12} = -1/2$がわかります．
+これより，$\bm{v}_2 = \tpv{1/2}{1}{-1/2}$です（手順\ref{gson_v2}）．
+
+$\bm{v}_1, \bm{v}_2$に直交するようなベクトル$\bm{v}_3$を，
+$\bm{v}_3 = \bm{w}_3 + a_{13}\bm{v}_1 + a_{23}\bm{v}_2 = \tpv{a_{13}+a_{23}/2}{a_{23}}{1+a_{13}-a_{23}/2}$とおきます．
+直交性より，$(\bm{v}_3, \bm{v}_1) = 2 a_{13} + 1 = 0, \ (\bm{v}_3, \bm{v}_2) = -1/2 + 3a_{23}/2 = 0$となり，
+$a_{13} = -1/2, \ a_{23} = 1/3$がわかります．
+これより，$\bm{v}_3 = \tpv{-1/3}{1/3}{1/3}$です（手順\ref{gson_vi}）．
+
+最後に正規化を行うことで，$\mathbb{R}^3$の正規直交基底$\{ \bm{u}_1, \bm{u}_2, \bm{u}_3 \}$が得られます（手順\ref{gson_norm}）．
+\begin{align*}
+    \bm{u}_1 = \frac{1}{\sqrt{2}}\begin{bmatrix} 1 \\ 0 \\ 1 \end{bmatrix},
+    \bm{u}_2 = \frac{1}{\sqrt{6}}\begin{bmatrix} 1 \\ 2 \\ -1 \end{bmatrix},
+    \bm{u}_3 = \frac{1}{\sqrt{3}}\begin{bmatrix} -1 \\ 1 \\ 1 \end{bmatrix}
+\end{align*}
+
+
+
+%%%===============================================
+\section{QR分解}  \label{sec_qrdecom}
+%%%===============================================
+
+%%%-----------------------------------------------
+\subsection{QR分解}  \label{subsec_qrdecom}
+%%%-----------------------------------------------
+正則行列を，直交行列と上三角行列の積に分解することをQR分解と呼びます．
+
+\ref{subsec_gson}節と同様に，$\{ \bm{w}_1, \ldots, \bm{w}_n \}$を基底とし，それを正規直交化したものを$\{ \bm{u}_1, \ldots, \bm{u}_n \}$とします．
+\ref{subsec_gson}節の手順\ref{gson_v2}，\ref{gson_vi}を思い出すと，$\bm{v}_k$は，
+\begin{align}
+    \bm{v}_k = \bm{w}_k + \sum_{i=1}^{k-1} a_{ik}\bm{v}_i
+\end{align}
+と表されました．
+これを変形すると，
+\begin{align}
+    \bm{w}_k = \bm{v}_k - \sum_{i=1}^{k-1} a_{ik}\bm{v}_i
+    = -(-1) \cdot \bm{v}_k - \sum_{i=1}^{k-1} a_{ik}\bm{v}_i
+\end{align}
+となり，$a_{kk} \coloneqq -1$とおくと，
+\begin{align}
+    \bm{w}_k = - \sum_{i=1}^{k} a_{ik}\bm{v}_i
+    \label{wk_k}
+\end{align}
+とまとめられます．
+さらに，$\bm{v}_{i} \ (k+1 \leq i \leq n)$について，その係数を$a_{ik} \coloneqq 0$として，
+$\alpha_{ik} \coloneqq -a_{ik} \ (1 \leq i \leq n)$とおくと，(\ref{wk_k})式は，
+\begin{align}
+    \bm{w}_k = \sum_{i=1}^{n} \alpha_{ik}\bm{v}_i
+    \label{wk_n}
+\end{align}
+と書き換えらえます．
+これを行列形式に書き直すと，
+\begin{align}
+    \begin{bmatrix} \bm{w}_1 & \cdots & \bm{w}_n \end{bmatrix}
+    = \begin{bmatrix} \bm{v}_1 & \cdots & \bm{v}_n \end{bmatrix}
+    \begin{bmatrix}
+        \alpha_{11} & \cdots & \alpha_{1n} \\
+        \vdots & \ddots & \vdots \\
+        \alpha_{n1} & \cdots & \alpha_{nn} \\
+    \end{bmatrix}
+    \label{wva}
+\end{align}
+となります．
+ここで，$a_{ik}$の定義より，$[\alpha_{ij}]$は上三角行列となります．
+また，$\displaystyle \bm{u} = \frac{\bm{v}}{\| \bm{v} \|}$より，
+\begin{align}
+    \begin{bmatrix} \bm{u}_1 & \cdots & \bm{u}_n \end{bmatrix}
+    = \begin{bmatrix} \bm{v}_1 & \cdots & \bm{v}_n \end{bmatrix}
+   \diag{\| \bm{v}_1 \|^{-1}, \ldots, \| \bm{v}_n \|^{-1}}
+\end{align}
+つまり，
+\begin{align}
+    \begin{bmatrix} \bm{v}_1 & \cdots & \bm{v}_n \end{bmatrix}
+    &= \begin{bmatrix} \bm{u}_1 & \cdots & \bm{u}_n \end{bmatrix}
+    \diag{\| \bm{v}_1 \|, \ldots, \| \bm{v}_n \|}
+    \label{vudiagnv}
+\end{align}
+であり，これを(\ref{wva})式へ代入すると，
+\begin{align}
+    \begin{bmatrix} \bm{w}_1 & \cdots & \bm{w}_n \end{bmatrix}
+    = \begin{bmatrix} \bm{u}_1 & \cdots & \bm{u}_n \end{bmatrix}
+    \diag{\| \bm{v}_1 \|, \ldots, \| \bm{v}_n \|}
+    \begin{bmatrix}
+        \alpha_{11} & \cdots & \alpha_{1n} \\
+        \vdots & \ddots & \vdots \\
+        \alpha_{n1} & \cdots & \alpha_{nn} \\
+    \end{bmatrix}
+    \label{wvdiagnvalp}
+\end{align}
+となります．
+ここで，$\{ \bm{w}_1, \ldots, \bm{w}_n \}$が基底であることより，$W \coloneqq \hv{\bm{w}_1}{\cdots}{\bm{w}_n}$は正則行列，
+また，$\{ \bm{u}_1, \ldots, \bm{u}_n \}$は正規直交基底であることより，$Q \coloneqq \hv{\bm{u}_1}{\cdots}{\bm{u}_n}$は直交行列となります．
+さらに，
+\begin{align}
+    R \coloneqq \diag{\| \bm{v}_1 \|, \ldots, \| \bm{v}_n \|}
+    \begin{bmatrix}
+        \alpha_{11} & \cdots & \alpha_{1n} \\
+        \vdots & \ddots & \vdots \\
+        \alpha_{n1} & \cdots & \alpha_{nn} \\
+    \end{bmatrix}
+    \label{rdiagvnalp}
+\end{align}
+とおくと，上三角行列同士の積は再び上三角行列となることから，$R$は上三角行列となります．
+以上より，正則行列$W$は，直交行列$Q$と上三角行列$R$の積で表されることが示されました．
+
+
+%%%-----------------------------------------------
+\subsection{具体例}  \label{subsec_qrdecom_ex}
+%%%-----------------------------------------------
+\ref{subsec_gson_ex}節の$\mathbb{R}^3$の基底を並べて得られる正則行列$\hv{\bm{w}_1}{\bm{w}_2}{\bm{w}_3}$のQR分解を考えます．
+
+正規直交化の結果より，$\bm{w}$と$\bm{v}$の関係を行列形式で表すと，
+\begin{align}
+    \begin{bmatrix}
+        1 & 1 & 0 \\
+        0 & 1 & 0 \\
+        1 & 0 & 1
+    \end{bmatrix}
+    = \begin{bmatrix}
+        1 & 1/2 & -1/3 \\
+        0 & 1 & 1/3 \\
+        1 & -1/2 & 1/3
+    \end{bmatrix}
+    \begin{bmatrix}
+        1 & 1/2 & 1/2 \\
+        0 & 1 & -1/3 \\
+        0 & 0 & 1
+    \end{bmatrix}
+    \label{wva_ex}
+\end{align}
+となります（(\ref{wva})式）．
+また，$\| \bm{v}_1 \| = \sqrt{2}, \| \bm{v}_2 \| = 3/\sqrt{6}, \| \bm{v}_3 \| = 1/\sqrt{3}$より，
+$\bm{v}$と$\bm{w}$は，
+\begin{align}
+    \begin{bmatrix}
+        1 & 1/2 & -1/3 \\
+        0 & 1 & 1/3 \\
+        1 & -1/2 & 1/3
+    \end{bmatrix}
+    = \begin{bmatrix}
+        1/\sqrt{2} & 1/\sqrt{6} & -1/\sqrt{3} \\
+        0 & 2/\sqrt{6} & 1/\sqrt{3} \\
+        1/\sqrt{2} & -1/\sqrt{6} & 1/\sqrt{3}
+    \end{bmatrix}
+    \begin{bmatrix}
+        \sqrt{2} & 0 & 0 \\
+        0 & 3/\sqrt{6} & 0 \\
+        0 & 0 & 1/\sqrt{3}
+    \end{bmatrix}
+    \label{vudiagnv_ex}
+\end{align}
+の関係を持ちます（(\ref{vudiagnv})式）．
+(\ref{wva_ex})(\ref{vudiagnv_ex})式より，正則行列$\hv{\bm{w}_1}{\bm{w}_2}{\bm{w}_3}$は，
+\begin{align}
+    \begin{bmatrix}
+        1 & 1 & 0 \\
+        0 & 1 & 0 \\
+        1 & 0 & 1
+    \end{bmatrix}
+    &= \begin{bmatrix}
+        1/\sqrt{2} & 1/\sqrt{6} & -1/\sqrt{3} \\
+        0 & 2/\sqrt{6} & 1/\sqrt{3} \\
+        1/\sqrt{2} & -1/\sqrt{6} & 1/\sqrt{3}
+    \end{bmatrix}
+    \begin{bmatrix}
+        \sqrt{2} & 0 & 0 \\
+        0 & 3/\sqrt{6} & 0 \\
+        0 & 0 & 1/\sqrt{3}
+    \end{bmatrix}
+    \begin{bmatrix}
+        1 & 1/2 & 1/2 \\
+        0 & 1 & -1/3 \\
+        0 & 0 & 1
+    \end{bmatrix} \\
+    &= \begin{bmatrix}
+        1/\sqrt{2} & 1/\sqrt{6} & -1/\sqrt{3} \\
+        0 & 2/\sqrt{6} & 1/\sqrt{3} \\
+        1/\sqrt{2} & -1/\sqrt{6} & 1/\sqrt{3}
+    \end{bmatrix}
+    \begin{bmatrix}
+        \sqrt{2} & 1/\sqrt{2} & 1/\sqrt{2} \\
+        0 & 3/\sqrt{6} & -1/\sqrt{6} \\
+        0 & 0 & 1/\sqrt{3}
+    \end{bmatrix}
+\end{align}
+と分解され（(\ref{wvdiagnvalp})(\ref{rdiagvnalp})式），直交行列$\hv{\bm{u}_1}{\bm{u}_2}{\bm{u}_3}$と上三角行列の積で表されることがわかります．
+
+
+%%%-----------------------------------------------
+\subsection{応用：QR法}  \label{subsec_qralg}
+%%%-----------------------------------------------
+最後に，QR分解の応用として，行列の固有値
+\footnote{
+    正方行列$A$，ベクトル$\bm{x} \neq \bm{0}$に対して，$A\bm{x} = \lambda \bm{x}$を満たすような値$\lambda$のことを固有値と言います．
+    固有値は，行列の対角化，システムの安定性の判定，主成分分析などで登場します．
+}
+を求めるアルゴリズムであるQR法を紹介して終わりにしたいと思います．
+証明は少し込み入っているので，今回はQR法の紹介だけに留め，詳細は省略することにします．
+興味のある方は，参考文献に挙げるものを参照していただければと思います．
+%%%
+\begin{enumerate}
+    \item $A_1 = A$とおく．
+        $k = 1, 2, \ldots$に対し，次の\ref{decom}, \ref{prod}を繰り返し行う．
+    \item $A_k$のQR分解を行う：$A_k = Q_k R_k$  \label{decom}
+    \item \ref{decom}で得た行列の順序を入れ替え積を計算する：$A_{k+1} = R_k Q_k$   \label{prod}
+\end{enumerate}
+この操作の反復を繰り返し行うことで$A_k$は上三角行列へと収束し，その対角成分は行列$A$の固有値が並ぶ．
+
+
+
+%%%===============================================
+\section{問}  \label{sec_question}
+%%%===============================================
+\begin{question}
+    例\ref{vs_ex_rn}について，$\mathbb{R}^n$が線型空間の公理を満たすことを確認せよ．
+\end{question}
+
+\begin{question}
+    例\ref{ip_ex_ei}について，$\mathbb{R}^n$の標準内積が内積の公理を満たすことを確認せよ．
+\end{question}
+
+\begin{question}
+    \label{q_uptri}
+    上三角行列の和及び積は，再び上三角行列になることを示せ．
+\end{question}
+
+\begin{question}
+    \label{q_diagpow}
+    $n \in \mathbb{Z}$について，$\diag{a_{1}, \ldots, a_{k}}^{n} = \diag{a_{1}^{n}, \ldots, a_{k}^{n}}$を示せ．
+\end{question}
+
+\begin{question}
+    \label{q_coef}
+    \ref{subsec_gson}節の正規直交化における係数$a_{ij} \ (1 \leq i \leq j, \ 1 \leq j \leq n)$を，$\bm{v}_i, \bm{v}_j$を用いて表せ．
+\end{question}
+\begin{comment}
+    答\ref{q_coef}：
+    $k \leq j$について，$\bm{v}_i \bot \bm{v}_k$であることに注意する．
+    $\bm{v}_i \bot \bm{v}_j$より，
+    \begin{align*}
+        a_{ij} = - \frac{(\bm{v}_i, \bm{v}_j)}{(\bm{v}_i, \bm{v}_i)}
+    \end{align*}
+    が得られる．
+\end{comment}
+
+\begin{question}
+    \label{q_orth}
+    \ref{subsec_gson_ex}節の具体例で求めた$\bm{w}_1, \bm{w}_2, \bm{w}_3$及び$\bm{u}_1, \bm{u}_2, \bm{u}_3$がそれぞれ直交していることを確認せよ．
+    また，$\|\bm{u}_1\| = \| \bm{u}_2 \| = \| \bm{u}_3 \| = 1$となっていることを確認せよ．
+\end{question}
+
+\begin{question}
+    \label{q_parallel}
+    \ref{subsec_gson_ex}節の$\{ \bm{w}_1, \bm{w}_2, \bm{w}_3 \}$について，直交化と正規化を交互に行うことで正規直交化を行え．
+\end{question}
+
+\begin{question}
+    \label{q_order}
+    \ref{subsec_gson_ex}節の$\{ \bm{w}_1, \bm{w}_2, \bm{w}_3 \}$について，直交化を行う順番を変えて正規直交化を行え．
+\end{question}
+\begin{comment}
+    $\bm{w}_3$から順に直交化を行うと，$\bm{v}_1 = \tpv{1/2}{-1/2}{0}, \ \bm{v}_2 = \tpv{1}{1}{0}, \ \bm{v}_3 = \tpv{0}{0}{1}$となる．
+    これを正規化すると，
+    \begin{align*}
+        \bm{u}_1 = \frac{1}{\sqrt{2}} \begin{bmatrix} 1 \\ -1 \\ 0 \end{bmatrix},
+        \bm{u}_2 = \frac{1}{\sqrt{2}} \begin{bmatrix} 1 \\ 1 \\ 0 \end{bmatrix},
+        \bm{u}_3 = \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}
+    \end{align*}
+\end{comment}
+
+\begin{question}
+    \label{q_numex}
+    $\mathbb{R}^3$の基底$\bm{w}_1 = \tpv{0}{1}{1}, \bm{w}_2 = \tpv{1}{0}{2}, \bm{w}_3 = \tpv{2}{2}{1}$について正規直交化を行え．
+    また，$\hv{\bm{w}_1}{\bm{w}_2}{\bm{w}_3}$のQR分解を行え．
+\end{question}
+\begin{comment}
+    答\ref{q_numex}：
+    \begin{align*}
+        \begin{bmatrix}
+            0 & 1 & 1 \\
+            1 & 0 & 2 \\
+            1 & 2 & 1
+        \end{bmatrix}
+        = \begin{bmatrix}
+            0 & 1/\sqrt{3} & 2/\sqrt{6} \\
+            1/\sqrt{2} & -1/\sqrt{3} & 1/\sqrt{6} \\
+            1/\sqrt{2} & 1/\sqrt{3} & -1/\sqrt{6}
+        \end{bmatrix}
+        \begin{bmatrix}
+            \sqrt{2} & \sqrt{2} & 3\sqrt{2}/2 \\
+            0 & \sqrt{3} & \sqrt{3}/3 \\
+            0 & 0 & 5\sqrt{6}/6
+        \end{bmatrix}
+    \end{align*}
+\end{comment}
+
+\begin{question}
+    \label{q_qrdecom_det}
+    ある$n$次正則行列$A$が，$A = QR$とQR分解されたとする．
+    このとき，$\displaystyle \left| \det(A) \right| = \left| \prod_{i = 1}^{n} r_{ii} \right|$で表されることを示せ．
+    但し，$r_{ii} \ ( i = 1, \ldots, n)$は$R$の対角成分．
+\end{question}
+
+\begin{question}
+    \label{q_qr_eq_solve}
+    ある正則行列$A$が，$A = QR$とQR分解されるとする．
+    このとき，方程式$A \bm{x} = \bm{b}$は$R \bm{x} = \tp{Q}\bm{b}$へと変形されることを示せ．
+\end{question}
+
+\begin{question}
+    \label{q_qr_eq_solve_ex}
+    \ref{subsec_qrdecom_ex}節の$W \coloneqq \hv{\bm{w}_1}{\bm{w}_2}{\bm{w}_3}$について，
+    問\ref{q_qr_eq_solve}の結果を用いて，逆行列$W^{-1}$を計算せずに，
+    連立方程式$W\bm{x} = \tpv{3}{-2}{8}$の解を求めよ．
+\end{question}
+\begin{comment}
+    答\ref{q_qr_eq_solve_ex}：
+    $W$は正則より，$W = QR$のようにQR分解される．
+    また，問\ref{q_qr_eq_solve}より，連立方程式は$R\bm{x} = \tp{Q}\bm{b}$と変形される．
+    このとき，$R$は上三角行列より，$x_3$から順に解いていけば良く，$\bm{x} = \tpv{5}{-2}{3}$．
+\end{comment}
+
+\begin{question}
+    \label{q_powdec}
+    \ref{subsec_qralg}節の$A$について，$A^k = Q_1 Q_2 \cdots Q_k R_k R_{k-1} \cdots R_1$で表されることを示せ．
+\end{question}
+
+
+
+%%% ============================================================================
+\begin{thebibliography}{9}
+    \bibitem{linalg_saito} 齋藤正彦「線型代数入門」東京大学出版会 ISBN 978-4-13-062001-7 1966年
+    \bibitem{linalg_miyake} 三宅敏恒「入門線形代数」培風館 ISBN 978-4-563-00216-9 1991年
+    \bibitem{linalg_hasegawa} 長谷川浩司「線型代数」日本評論社 ISBN 978-4-535-78371-3 2004年
+    \bibitem{linalg_saito_2} 齋藤正彦「線型代数学」東京図書 ISBN 978-4-489-02179-4 2014年
+    \bibitem{linalg_satake} 佐武一郎「線型代数学（新装版）」裳華房 ISBN 978-4-7853-1316-6 2015年
+    \bibitem{linalg_program} 平岡和幸・堀玄「プログラミングのための線形代数」オーム社 ISBN 978-4-274-06578-2 2004年
+    \bibitem{numana_mori} 森正武「数値解析」共立出版 ISBN 978-4-320-01103-1 1973年
+    \bibitem{numana_natori} 名取亮「数値解析とその応用」コロナ社 ISBN 978-4-339-02548-8 1990年
+    \bibitem{appint_nakamura} 中村佳正「加積分系の応用数理」裳華房 ISBN 978-4-7853-1520-2 2000年
+\end{thebibliography}
+
+
+\end{document}
