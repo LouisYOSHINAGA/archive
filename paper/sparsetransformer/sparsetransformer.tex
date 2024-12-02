@@ -1,0 +1,475 @@
+\documentclass[dvipdfmx]{beamer}
+\usepackage{ybt}
+
+\DeclareFontShape{JY1}{gt}{m}{it}{<->ssub*gt/m/n}{}
+\DeclareFontShape{JT1}{gt}{m}{it}{<->ssub*gt/m/n}{}
+
+
+\ytitle{Sparse Transformer \ (Child+, 2019)}
+{Generating Long Sequences with Sparse Transformers}
+{Rewon Child et al., 2019}
+{\today}
+
+
+\begin{document}
+
+\begin{frame}[plain,noframenumbering]
+    \titlepage
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Background}
+    \begin{itemize}
+        \item Consider the task of autoregressive sequence generation
+        \item The joint probability of sequence $\bm{x} = \{ x_1, \ldots, x_n \}$ is modeled as
+            \begin{yalign}
+                p(\bm{x}) = \prod_{i=1}^{n} p(x_i \mid x_1, \ldots, x_{i-1}; \theta)
+            \end{yalign}
+            where $\theta$ is a network
+    \end{itemize}
+    \yvspace{0.5}
+    %
+    \begin{itemize}
+        \item $\theta$: Transformer in decoder-only mode
+        \begin{itemize}
+            \item Input: sequence of tokens
+            \item Output: categorical distribution
+            \item Objective: maximize the log-probability of the data wrt $\theta$
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Formularization of the Self-Attention}
+    \begin{itemize}
+        \item Self-attention layer:
+        \begin{itemize}
+            \item a matrix of input embeddings $X$ $\to$ output matrix
+            \item parameterized by a connectivity pattern $S = \{ S_1, \ldots, S_n \}$
+        \end{itemize}
+        %
+        \begin{yalign}
+            & \mathrm{attend}(X, S) = \begin{bmatrix} a(\bm{x}_i, S_i) \end{bmatrix}_{i \in \{ 1, \ldots, n \}} \\
+            & a(\bm{x}_i, S_i) = \mathrm{softmax}\left( \frac{[W_q \bm{x}_i] K_{S_i}^{T}}{\sqrt{d}} \right) V_{S_i} \\
+            & K_{S_i} = \begin{bmatrix} W_k \bm{x}_j \end{bmatrix}_{j \in S_i} \quad
+                V_{S_i} = \begin{bmatrix} W_v \bm{x}_j \end{bmatrix}_{j \in S_i} \\
+            & \mathrm{attention}(X) = W_p \cdot \mathrm{attend}(X, S)
+        \end{yalign}
+        where $W_q, W_k, W_v, W_p$: the weight matrix
+    \end{itemize}
+    %
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Calculating the Self-Attention}
+    \yvspace{-1.25}
+    {\small
+        \begin{align*}
+            \mathrm{attention}(X) &= W_p \cdot \mathrm{attend}(X, S)
+                = W_p \cdot \begin{bmatrix} a(\bm{x}_i, S_i) \end{bmatrix}_{i \in \{ 1, \ldots, n \}} \\
+                &= W_p \cdot \mathrm{softmax}
+                    \left(
+                        \frac{
+                            \begin{bmatrix} W_q \bm{x}_i \end{bmatrix}
+                            \begin{bmatrix} W_k \bm{x}_j \end{bmatrix}^T_{j \in S_i}
+                        }{\sqrt{d}}
+                    \right)
+                    \begin{bmatrix} W_v \bm{x}_j \end{bmatrix}_{j \in S_i}
+        \end{align*}
+    }
+    \yvspace{0.5}
+    %
+    \begin{itemize}
+        \item Example: $i = 5, \ a(\bm{x}_5, S_5)$
+        \begin{itemize}
+            \item $S_5 = \{ 1, 2, 3, 4, 5 \}$
+        \end{itemize}
+        \yvspace{1.75}
+        \yfig{width=0.8\textwidth}{figure/attend_example.png}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Standard Transformer}
+    \begin{columns}
+        \begin{column}[T]{0.325\textwidth}
+            \yvspace{-1}
+            \yfig{width=\textwidth}{figure/normal_transformer.png}
+        \end{column}
+        %
+        \begin{column}[T]{0.675\textwidth}
+            \yvspace{-0.5}
+            \yfig{width=0.95\textwidth}{figure/attention_matrix.png}
+            \begin{itemize}
+                \item Full self-attention for autoregressive models defines $S_i = \{ j \mid j \leq i \}$
+                \item Become intractable as $n$ grows; $\mathcal{O}(n^2)$
+                \item Replace $S_i$ with efficient $A_i \subset S_i$ \\
+                    Let $|A_i| \propto \sqrt[p]{n}$; \ $\mathcal{O}(n \sqrt[p]{n})$
+                    \begin{itemize}
+                        \item In this work $p = 2$
+                    \end{itemize}
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Qualitative assessment of learned attention patterns}
+    \yvspace{-0.5}
+    \yfig{width=0.95\textwidth}{figure/learned_attention_pattern.png}
+    \begin{itemize}
+        \item Learned attention patterns from a 128-layer network
+        % \item White: attention weights, Black: autoregressive mask
+        \begin{itemize}
+            \item[a)] Early layers: locally connected pattern like convolution
+            \item[b)] Layers 19-20: to split into row and column attention
+            \item[c)] Several layers: global, data-dependent patterns
+            \item[d)] Layers 64-128: high sparsity, with activating rarely
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Sparse Transformer (strided)}
+    \begin{columns}
+        \begin{column}[T]{0.325\textwidth}
+            \yvspace{-1}
+            \yfig{width=\textwidth}{figure/strided_transformer.png}
+        \end{column}
+        %
+        \begin{column}[T]{0.675\textwidth}
+            \begin{itemize}
+                \item Let stride $l \approx \sqrt{n}$
+                    \begin{yalign*}
+                        A^{(1)}_{i} &= \{ t, t+1, \ldots, i \} \\
+                        A^{(2)}_{i} &= \{ j \mid (i-j) \mod l = 0 \}
+                    \end{yalign*}
+                    where $t = \max(0, i-l)$
+            \end{itemize}
+            \yvspace{-0.25}
+            %
+            \begin{itemize}
+                \item Useful for data with periodic structure
+                \begin{itemize}
+                    \item image, music
+                \end{itemize}
+            \end{itemize}
+            %
+            \begin{itemize}
+                \item In left figure, $i = 28, l = 5$
+                    {\footnotesize
+                        \begin{yalign*}
+                            t &= \max(0, 28-5) = 23 \\
+                            A^{(1)}_{28} &= \{ 23, 24, 25, 26, 27, 28 \} \ \text{\scriptsize (upper left)}\\
+                            A^{(2)}_{28} &= \{ 4, 10, 16, 22, 28 \} \ \text{\scriptsize (upper right)}
+                        \end{yalign*}
+                    }
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Sparse Transformer (fixed)}
+    \begin{columns}
+        \begin{column}[T]{0.325\textwidth}
+            \yvspace{-1}
+            \yfig{width=\textwidth}{figure/fixed_transformer.png}
+        \end{column}
+        %
+        \begin{column}[T]{0.675\textwidth}
+            \begin{itemize}
+                \item Let stride $l \approx \sqrt{n}$
+                    \begin{yalign*}
+                        A^{(1)}_{i} &= \{ j \mid \lfloor i/l \rfloor = \lfloor j/l \rfloor \} \\
+                        A^{(2)}_{i} &= \{ j \mid j \mod l \in \{ t, t+1, \ldots, l \} \}
+                    \end{yalign*}
+                    where $t = l - c$, $c$ is hyperparameter
+            \end{itemize}
+            \yvspace{-0.25}
+            %
+            \begin{itemize}
+                \item Useful for data without periodic structure
+                \begin{itemize}
+                    \item text
+                \end{itemize}
+            \end{itemize}
+            %
+            \begin{itemize}
+                \item In left figure, $i = 28, l = 6, c = 0$
+                    {\footnotesize
+                        \begin{yalign*}
+                            t &= 6 - 0 = 6 \\
+                            A^{(1)}_{28} &= \{ 24, 25, 26, 27, 28 \} \ \text{\scriptsize (upper left)}\\
+                            A^{(2)}_{28} &= \{ 6, 12, 18, 24 \} \ \text{\scriptsize (upper right)}
+                        \end{yalign*}
+                    }
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Factorized attention heads}
+    \yvspace{-0.5}
+    \begin{itemize}
+        \item The simplest technique:
+        {\small
+            \begin{yalign}
+                \mathrm{attention}(X) = W_p \cdot \mathrm{attend}(X, A^{(r \mod p)})
+            \end{yalign}
+        }
+        {\footnotesize where $r$: index of residual block, \ $p$: number of attention heads}
+        \begin{itemize}
+            \item Use one attention type per residual block
+            \item Interleave them sequentially or at a ratio
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Marged head:
+        \yvspace{-0.5}
+        {\small
+            \begin{yalign}
+                \mathrm{attention}(X) = W_p \cdot \mathrm{attend}(X, \bigcup_{m=1}^{p} A^{(m)})
+            \end{yalign}
+        }
+        \yvspace{-0.25}
+        \begin{itemize}
+            \item Merge factorized attentions, use it as a single attention
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Multi-head attention:
+        {\small
+            \begin{yalign}
+                \mathrm{attention}(X) = W_p \begin{bmatrix} \mathrm{attend}(X, A)^{(i)} \end{bmatrix}_{i \in \{ 1, \ldots, n_h \}}
+            \end{yalign}
+        }
+        \yvspace{-0.25}
+        \begin{itemize}
+            \item $n_h$ attention products are computed in parallel then concatenated
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Sparse Transformer}
+    \begin{columns}
+        \begin{column}[T]{0.375\textwidth}
+            \yvspace{-0.75}
+            \yfig{width=\textwidth}{figure/sparse_transformer_diagram.png}
+        \end{column}
+        %
+        \begin{column}[T]{0.625\textwidth}
+            \begin{itemize}
+                \item Define a network of $N$ layers as follows:
+            \end{itemize}
+            \yvspace{-0.25}
+            %
+            {\small
+                \begin{yalign}
+                    H_{0} &= \mathrm{embed}(X, W_e) \\
+                    H_{k} &= H_{k-1} + \mathrm{resblock}(H_{k-1}) \\
+                    y &= \mathrm{softmax}(\mathrm{norm}(H_{N})\, W_{out})
+                \end{yalign}
+                % where $W_{out}$: the weight matirx
+                %
+                \begin{yalign}
+                    a(H) &= \mathrm{dropout}(\mathrm{attention}(\mathrm{norm}(H))) \\
+                    b(H) &= \mathrm{dropout}(\mathrm{ff}(\mathrm{norm}(H + a(H)))) \\
+                    &\mathrm{resblock}(H) = a(H) + b(H)
+                \end{yalign}
+                %
+                {\footnotesize
+                    \begin{yalign*}
+                        \mathrm{ff}(x) &= W_2 f(W_1 x + b_1) + b_2 \\
+                        f(x) &= \mathrm{GELU}(x) = x \cdot \mathrm{sigmoid}(1.702x)
+                    \end{yalign*}
+                }
+                %
+                \begin{yalign}
+                    \yhspace{3.75}
+                    \thickmuskip=0mu \medmuskip=0mu \thinmuskip=0mu
+                    \mathrm{embed}(X, W_e) = \begin{bmatrix} \displaystyle \bm{x}_i W_e + \sum_{j=1}^{n_{emb}} \bm{o}_i^{(j)} W_j \end{bmatrix}_{\bm{x}_i \in X}
+                \end{yalign}
+            }
+        \end{column}
+    \end{columns}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Experiments}
+    \begin{columns}
+        \begin{column}[T]{0.575\textwidth}
+            \yvspace{1}
+            \begin{itemize}
+                \item Task: Density modeling
+                \begin{itemize}
+                    \item Image: CIFAR-10, ImageNet 64x64
+                    \item Text: EnWik8
+                    \item Audio: Classical music
+                \end{itemize}
+            \end{itemize}
+            %
+            \begin{itemize}
+                \item Evaluaton: Bits/byte
+                \begin{itemize}
+                    \item Negative log-likelihood per byte
+                \end{itemize}
+            \end{itemize}
+            %
+            \begin{itemize}
+                \item Results:
+                \begin{itemize}
+                    \item Sota in images and text
+                    \item Easily adaptable to raw audio
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+        %
+        \begin{column}[T]{0.425\textwidth}
+            \yfig{width=\textwidth}{figure/exp_table.png}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{ImageNet 64x64}
+    \yfigcap{width=\textwidth}{figure/imagenet.png}{Unconditional samples from ImageNet 64x64}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Classical music from raw audio}
+    \yvspace{-0.25}
+    \begin{itemize}
+        \item Model: Strided Sparse Transformer 152M parameters
+        \item Task: 12kHz audio generation
+        \begin{itemize}
+            \item 65535 sequence length = 5 second audio at 12kHz
+            \item Trained models on classical music dataset
+        \end{itemize}
+        \item Samples: {\footnotesize \url{https://openai.com/blog/sparse-transformer/}}
+        \begin{itemize}
+            \item Clearly demonstrate global coherence
+            \item Exhibit a variety of play styles and tones
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Sequence length vs. Model capacity
+        \begin{itemize}
+            \item The largest model which entirely fit into 16GB V100 accelerators
+            % \item Sequence length $\times 4$ $\Rightarrow$ Parameters $\times 1/8$
+            \item We could use factorized self-attention on sequences over 1M timesteps, \\
+                albeit with extremely few parameters (3M)
+        \end{itemize}
+        \yvspace{-0.25}
+        \yfig{width=0.4\textwidth}{figure/classical_audio.png}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Conclusion}
+    \begin{itemize}
+        \item Sparse Transformer
+        \begin{itemize}
+            \item Reduce the computation in the self-attention
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Factorized Self-Attention
+        \begin{itemize}
+            \item Separate the self-attention across several attention patterns
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Better performances on density modeling of long sequences
+        \begin{itemize}
+            \item Sota in images and text, Easily adaptable to raw audio
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}[noframenumbering]
+    \frametitle{Learnable Embedding}
+    \begin{itemize}
+        \item Add $n_{emb}$ embeddings to each input location
+            \begin{align*}
+                \mathrm{embed}(X, W_e) = \begin{bmatrix} \displaystyle \bm{x}_i W_e + \sum_{j=1}^{n_{emb}} \bm{o}^{(j)}_{i} W_j \end{bmatrix}_{\bm{x}_i \in X}
+            \end{align*}
+            where $\bm{x}_i$: one-hot encoded $i$th element in the sequence \\
+            \yhspace{2.5} $\bm{o}^{(j)}_{i}$: one-hot encoded position of $\bm{x}_i$ in the $j$th dimension %($1 \leq j \leq n_{emb}$)
+    \end{itemize}
+    \yvspace{0.5}
+    %
+    \begin{itemize}
+        \item For images: $n_{emb} = 3$ \ {\footnotesize (row, column, channel)}
+        \item For text and audio: $n_{emb} = 2$ \ {\footnotesize (row, column)}
+    \end{itemize}
+    %
+\end{frame}
+
+
+\begin{frame}[noframenumbering]
+    \frametitle{Model details in Experiments}
+    \yhead{CIFAR-10}
+    \begin{yitemize}
+        \item Strided Sparse Transformer
+        \begin{yitemize}
+            \item 2 heads, 128 layers, $d = 256$
+        \end{yitemize}
+        \item CIFAR-10: 3,072 contexts
+    \end{yitemize}
+    \yvspace{0.5}
+    %
+    \yhead{Text}
+    \begin{yitemize}
+        \item Fixed Sparse Transformer
+        \begin{yitemize}
+            \item 8 heads, 30 layers, $d = 512$, stride $= 128$, $c = 32$, merged head
+        \end{yitemize}
+        \item EnWik8 dataset: 12,288 contexts
+    \end{yitemize}
+    \yvspace{0.5}
+    %
+    \yhead{ImageNet 64x64}
+    \begin{yitemize}
+        \item Strided Sparse Transformer
+        \begin{yitemize}
+            \item 16 heads, 48 layers, $d = 512$, stride $= 128$
+        \end{yitemize}
+        % \item ImageNet 64x64: 12,288 contexts
+    \end{yitemize}
+\end{frame}
+
+
+\begin{frame}[noframenumbering]
+    \frametitle{Model Comparison}
+    \yfig{width=0.55\textwidth}{figure/model_comparison.png}
+    \begin{itemize}
+        \item Running signiticantly faster than full attention
+        \item Converged to lower error
+    \end{itemize}
+\end{frame}
+
+
+\end{document}
