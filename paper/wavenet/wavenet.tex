@@ -1,0 +1,376 @@
+\documentclass[dvipdfmx]{beamer}
+\usepackage{ybt}
+
+
+\title[WaveNet \ (van den Oord+, 2016)]{
+    WaveNet: A Generative Model for Raw Audio \\
+    {\large A\"{a}ron van den Oord et al., 2016}
+}
+\author{Rui Yoshinaga}
+\date{\today}
+
+
+
+\begin{document}
+
+\begin{frame}[plain,noframenumbering]
+    \titlepage
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Overview}
+    \yhead{WaveNet: A Generative Model for Raw Audio}
+    \yvspace{0.5}
+    \begin{itemize}
+        \yinner{1}
+        \item Topic: Audio Generation
+        \item Contributions:
+        \begin{itemize}
+            \yinner{1}
+            \item Text-to-Speech (TTS)：Generating natural speech
+            \item Develop new architectures
+            \item Various audio generation by conditioning
+            \item Application to music generation, etc.
+        \end{itemize}
+    \end{itemize}
+    \yvspace{1}
+    %
+    \begin{itemize}
+        \item Generated samples:
+        \begin{itemize}
+            \item {\scriptsize \url{https://deepmind.com/blog/article/wavenet-generative-model-raw-audio}}
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Composition}
+    \yvspace{-1.8}
+    \yfigcap{width=0.8\textwidth, height=3.5cm}{figure/wave.png}
+        {\scriptsize waveform $\bm{x} = \{ x_1, \ldots, x_T \} \in [-1, 1]^T$}
+    \yvspace{1}
+    %
+    \yhead{Modeling of $p(\bm{x})$}
+    \begin{itemize}
+        \yinner{1}
+        \item The joint probability of waveform $\bm{x}$ is factorised:
+            \yvspace{-0.2}
+            \begin{yalign}
+                p(\bm{x}) = \prod_{t=1}^{T} p(x_t \mid x_1, \ldots, x_{t-1}) \label{px}
+            \end{yalign}
+            \yvspace{-0.2}
+        \item Sample $x_t$ is conditioned on the previous samples $x_1, \ldots, x_{t-1}$
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Composition}
+    \yhead{Architecture}
+    \begin{itemize}
+        \yinner{1}
+        \item NN that takes inputs $x_{t-L}, \ldots, x_{t-1}$ and outputs $x_t$
+        \item Modeling by CNN (Dilated Causal Convolution)
+        \begin{itemize}
+            \yinner{1}
+            \item c.f. image generation \cite{pixelrnn,pixelcnn}, \ w/o pooling layer
+        \end{itemize}
+    \end{itemize}
+    \yvspace{1}
+    %
+    \yhead{Training and Generation}
+    \begin{itemize}
+        \yinner{1}
+        \item Training: maximize the log-likelihood
+        \item Generation: autoregression
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Softmax Distribution}
+    \yhead{Input/Output}
+    \begin{itemize}
+        \yinner{1}
+        \item Input: previous samples $x_{t-L}, \ldots, x_{t-1}$
+        \item Output: the probability distribution of next sample $x_t$
+    \end{itemize}
+    \yvspace{1}
+    %
+    \yhead{$\mu$-law companding transofrmation}
+    \begin{itemize}
+        \yinner{1}
+        \item raw audio: quantized at 16bits, \ amplitude: $2^{16}$ levels
+        \item Apply $\mu$-law companding transformation $\to$ 256 levels
+            \begin{yalign*}
+                f(x_t) = \mathrm{sign}(x_t) \frac{\ln(1 + \mu |x_t|)}{\ln(1 + \mu)}
+            \end{yalign*}
+           where $-1 < x_t < 1$ and $\mu = 255$
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Causal Convolution}
+    \yvspace{-1}
+    \yfig{width=0.8\textwidth}{figure/causalconv.png}
+    %
+    \begin{itemize}
+        \item Basic structure of WaveNet
+        \item Independent future samples $x_{t+1}, x_{t+2}, \ldots$
+        \item No recurrent connections, training in parallel
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Increase in the size of receptive field
+        \begin{itemize}
+            \item In the above figure, $\text{receptive field} = 5$
+            \item Increase layers or filter size
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Dilated Convolution}
+    \yfigcap{width=0.8\textwidth}{figure/dilatedconv.png}{receptive field = 16}
+    \yvspace{0.5}
+    %
+    \begin{itemize}
+        \item Skip inputs at fixed intervals
+        \item In WaveNet, dilation is doubled ($1, 2, 4, \ldots, 512, 1, 2, \ldots$)
+        \begin{itemize}
+            \item Exponential increase in dilation $\to$ larger receptive field
+            \item Stacking blocks further increases the size of receptive field
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Stacked Dilated Convolution}
+    \yfig{width=0.8\textwidth}{figure/stacked_dilated.png}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Gated Activation Unit}
+    \yvspace{-0.5}
+    \yfig{width=0.8\textwidth}{figure/gated_unit.png}
+    \yvspace{-0.5}
+    %
+    \begin{itemize}
+        \item Gated activation unit \cite{pixelcnn}
+            \begin{yalign}
+                \bm{z} = \tanh(W_{f,k} \ast \bm{x}) \, \odot \, \sigma(W_{g,k} \ast \bm{x}) \label{z}
+            \end{yalign}
+        \begin{itemize}
+            \item $W_{*,k}$：learnable convolution filter in $k$-th layer
+            \item $\ast$：convolution operator
+        \end{itemize}
+        \item Worked significantly better than ReLU
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Residual and Skip Connection}
+    \yfig{width=0.8\textwidth}{figure/resskip.png}
+    %
+    \begin{itemize}
+        \item Residual\,\cite{residual} and Skip Connections
+        \begin{itemize}
+            \item Speed up convergence
+            \item Enable training of much deeper model
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Conditional WaveNets}
+    \begin{itemize}
+        \item Modeling conditional distribution $p(\bm{x} | \bm{h})$ by additional input $\bm{h}$
+        \item Eq.(\ref{px}) now becomes
+            \begin{yalign}
+                p(\bm{x} \mid \alert{\bm{h}}) = \prod_{t=1}^{T} p(x_t \mid x_1, \ldots, x_{t-1}, \alert{\bm{h}})
+            \end{yalign}
+        \item Generate audio with the required characteristics by conditioning
+        \begin{itemize}
+            \yinner{1.4}
+            \item[e.g.1] speaker ID (who speaks)
+            \item[e.g.2] text for TTS (what to speaks)
+        \end{itemize}
+        \item Conditioning in 2 different ways:
+        \begin{itemize}
+            \item $\{$Global, Local$\}$ conditioning
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Global Conditioning}
+    \begin{itemize}
+        \item Conditioning on single $\bm{h}$ that influences output across all timesteps
+        \begin{itemize}
+            \yinner{1}
+            \item[e.g.] TTS: speaker embedding (who speaks)
+        \end{itemize}
+    \end{itemize}
+    \yvspace{1}
+    %
+    \begin{itemize}
+        \item The activation function from Eq.(\ref{z}) now becomes:
+            \begin{yalign*}
+                \bm{z} =
+                \tanh(W_{f,k} \ast \bm{x} + \alert{V_{f,k}^{T} \bm{h}}) \, \odot \,
+                \sigma(W_{g,k} \ast \bm{x} + \alert{V_{g,k}^{T} \bm{h}})
+            \end{yalign*}
+            \begin{itemize}
+                \item $W_{*,k}$ : learnable convolution filter in $k$-th layer
+                \item $\ast$ : convolution operator
+                \item $V_{*,k}$ : learnable linear projection in $k$-th layer
+                \yvspace{0.2}
+                \item $V^{T}_{*,k} \bm{h}$ : broadcast over the time dimention
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Local Conditioning}
+    \begin{itemize}
+        \item Condition on the second time series $\bm{h}=\{ h_t \}$
+        \begin{itemize}
+            \item $\bm{h}$ has a lower sampling frequency than audio $\bm{x}$
+            \item[e.g.] TTS: linguistic features
+        \end{itemize}
+    \end{itemize}
+    \yvspace{1}
+    %
+    \begin{itemize}
+        \item Map $\bm{h}$ to a new time series $\bm{y} = f(\bm{h})$
+        \begin{itemize}
+            \item $f$ : transposed convolutional network (learned upsampling)
+            \item (also possible to use $V_{f,k} \ast \bm{h}$ repeatedly across time)
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item The activation function from Eq.(\ref{z}) now becomes:
+            \begin{yalign*}
+                \bm{z} =
+                \tanh(W_{f,k} \ast \bm{x} + \alert{V_{f,k} \ast \bm{y}}) \, \odot \,
+                \sigma(W_{g,k} \ast \bm{x} + \alert{V_{g,k} \ast \bm{y}})
+            \end{yalign*}
+            \begin{itemize}
+                \item $W_{*,k}, V_{*,k}$ : learnable convolution filter in $k$-th layer
+                \item $\ast$ : convolution operator
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Experiments (Music)}
+    \yhead{Music Datasets}
+    \begin{enumerate}
+        \yinner{1}
+        \item MagnaTagATune dataset
+        \begin{itemize}
+            \yinner{1}
+            \item each 29-second clip is annotated with tags
+        \end{itemize}
+        \item YouTube piano dataset
+    \end{enumerate}
+    \yvspace{0.5}
+    %
+    \yhead{Receptive field}
+    \begin{itemize}
+        \yinner{1}
+        \item several seconds: long-range consistency $\times$
+        \item enlarging the receptive field $\to$ musical samples
+    \end{itemize}
+    \yvspace{0.5}
+    %
+    \yhead{Generating results}
+    \begin{itemize}
+        \yinner{1}
+        \item Harmonic and aesthetically pleasing even no conditioning
+        \item Conditioning on tags
+        \begin{itemize}
+            \yinner{1}
+            \item Train with one-hot vector corresponds to the tags
+            \item Control generation by conditioning on the one-hot vector
+        \end{itemize}
+        \item {\footnotesize \url{https://www.deepmind.com/blog/wavenet-generative-model-raw-audio/}}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Experiments}
+    \yhead{Multi-Speaker Speech Generation}
+    \begin{itemize}
+        \yinner{1}
+        \item Conditioned on the speaker: feed the speaker ID as one-hot vector
+        \item Generate non-existent but human language-like words realistically
+        \item Mimicked the breathing and mouth movements of the speakers
+    \end{itemize}
+    \yvspace{0.5}
+    %
+    \yhead{Text-To-Speech}
+    \begin{itemize}
+        \yinner{1}
+        \item Conditioned on the linguistic features and the value of $\log f_0$
+        \item Achieved 5-scale MOSs in naturalness above 4.0
+        \item Significantly better than the baseline
+    \end{itemize}
+    \yvspace{0.5}
+    %
+    \yhead{Speech Recognition}
+    \begin{itemize}
+        \yinner{1}
+        \item Partially change architecture and loss
+        \item Obtained the best score as model trained directly on raw audio
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Conclusion}
+    \begin{itemize}
+        \item WaveNet: A generative model for raw audio
+        \begin{itemize}
+            \item Directly generate audio as waveform (raw audio domain)
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Dilated Causal Convolutions
+        \begin{itemize}
+            \item Enables large receptive field with exponentially increasing dilation
+        \end{itemize}
+    \end{itemize}
+    %
+    \begin{itemize}
+        \item Can be applied in various applications about audio signals
+        \begin{itemize}
+            \item TTS, Music generation, Speech recognition
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{References}
+    \beamertemplatetextbibitems
+    \bibliographystyle{unsrt}
+    \bibliography{wavenet}
+ \end{frame}
+
+
+\end{document}
