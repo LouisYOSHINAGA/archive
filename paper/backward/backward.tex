@@ -1,0 +1,284 @@
+\documentclass[dvipdfmx]{beamer}
+
+\usepackage{bxdpx-beamer}
+\usepackage{pxjahyper}
+\usepackage{minijs}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{xcolor}
+\usepackage{amsmath, amssymb, mathtools, bm}
+
+\DeclareFontShape{JY1}{gt}{m}{it}{<->ssub*gt/m/n}{}
+\DeclareFontShape{JT1}{gt}{m}{it}{<->ssub*gt/m/n}{}
+
+\renewcommand{\kanjifamilydefault}{\gtdefault}
+\newcommand{\fp}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\tp}{{}^t\!}
+\renewcommand{\b}[2]{b_{#1}^{(#2)}}
+\renewcommand{\d}[2]{\delta_{#1}^{(#2)}}
+\renewcommand{\u}[2]{u_{#1}^{(#2)}}
+\newcommand{\w}[2]{w_{#1}^{(#2)}}
+\newcommand{\z}[2]{z_{#1}^{(#2)}}
+\newcommand{\bd}[2]{\bm{\delta}_{#1}^{(#2)}}
+\newcommand{\bu}[2]{\bm{u}_{#1}^{(#2)}}
+\newcommand{\bz}[2]{\bm{z}_{#1}^{(#2)}}
+\newcommand{\bup}[2]{\bm{#1}^{(#2)}}
+\newtheorem{thm}{定理}
+
+\usefonttheme{professionalfonts}
+
+\usetheme{Madrid}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize item}[circle]
+\setbeamertemplate{itemize subitem}[circle]
+\setbeamertemplate{enumerate item}[default]
+
+
+\title{誤差逆伝播法}
+\author{吉永 塁}
+\date{2020年5月15日}
+
+
+\begin{document}
+
+\begin{frame}[plain,noframenumbering]
+    \titlepage
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{記号設定}
+    \begin{itemize}
+        \item $L$層のニューラルネットワークを考える．
+        \item 第$l$層のユニット数を$\upsilon(l)$とおく．
+        \item 各ユニットの入出力について，
+            \begin{align*}
+                \z{j}{l}
+                = f(\u{j}{l})
+                = f\left( \sum_{i=0}^{\upsilon(l-1)} \w{ji}{l} \z{i}{l-1} \right)
+            \end{align*}
+            \begin{itemize}
+                \item $z$は入力，$u$は出力を表す．
+                \item 右肩括弧内の数字は第何層かを，下添字は何番目のユニットかを示す．
+                \item $w$は重み．
+                \item バイアスは$\w{j0}{l} = \b{j}{l}$，$\z{0}{l} \equiv 1$として重みの一部とする．
+                \item $f$は活性化関数．
+            \end{itemize}
+        \item $\bm{w}$ : 全てのパラメータ(重み，バイアス)を成分に持つベクトル．
+        \item $\bm{1}_{n} \coloneqq \sum_{i=1}^{n} \bm{e}_i$ : 全成分が1の$n$次元ベクトル
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{連鎖律}
+    \begin{thm}[連鎖律]
+        $U, W$がそれぞれ$\mathbb{R}^n, \mathbb{R}^m$の開集合であり，
+        二つの関数$f: U \to \mathbb{R}^n$，$g: W \to \mathbb{R}^p$が合成可能，
+        つまり$f(U) \subset W$であるとする．
+
+        いま，$f$が$\bm{x} \in U$で微分可能で，$g$が$\bm{y} = f(\bm{x})$で微分可能であるとすれば，
+        合成関数$\varphi = g \circ f$は$\bm{x}$で微分可能で，
+        \begin{align*}
+            &\fp{\varphi_r}{x_j}(\bm{x}) = \sum_{i=1}^{m} \fp{g_r}{y_i}(\bm{y}) \fp{f_i}{x_j}(\bm{x}) \\
+            &(1 \leq r \leq p, 1 \leq j \leq n)
+        \end{align*}
+        但し，添字$i$は第$i$成分を表す．
+    \end{thm}
+    証明略．
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{誤差逆伝播法}
+    \begin{itemize}
+        \item 勾配降下法では重み更新において勾配$\nabla E$が必要．
+        ここで誤差関数$E(\bm{w})$について，
+        \begin{align*}
+            \begin{dcases*}
+                E(\bm{w}) = \sum_{n=1}^{N} E_n(\bm{w}) & (バッチ学習) \\
+                E(\bm{w}) = \frac{1}{|D_t|} \sum_{n \in D_t} E_n(\bm{w}) & (ミニバッチ学習)
+            \end{dcases*}
+        \end{align*}
+        より，何れも$\nabla E_n(\bm{w})$を計算できれば良い．
+        \item 勾配計算はそのまま行うと面倒．
+        例えば，二乗誤差の場合，
+            \begin{align*}
+                \fp{E_n}{\w{ji}{l}} = \tp(\bm{y}(\bm{x}_n) - \bm{d}_n) \fp{\bm{y}}{\w{ji}{l}}
+            \end{align*}
+            となり，$\bm{y}$について，活性化関数のネストが深くなるので，連鎖律を繰り返し適用しなければいけない．
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{誤差逆伝播法}
+    第$l$層の重み$\w{ji}{l}$について，
+    \begin{align}
+        \fp{E_n}{\w{ji}{l}} = \fp{E_n}{\u{j}{l}} \fp{\u{j}{l}}{\w{ji}{l}} \label{e4_9}
+    \end{align}
+    (\ref{e4_9})式右辺第一項について，
+    \begin{align}
+        \fp{E_n}{\u{j}{l}} = \sum_{k=0}^{\upsilon(l+1)} \fp{E_n}{\u{k}{l+1}} \fp{\u{k}{l+1}}{\u{j}{l}}  \label{e4_10}
+    \end{align}
+    ここで，記号
+    \begin{align}
+        \d{j}{l} \coloneqq \fp{E_n}{\u{j}{l}}  \label{e4_11}
+    \end{align}
+    を導入する．$\delta$は誤差と呼ばれる．
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{誤差逆伝播法}
+    (\ref{e4_10})式右辺第二項について，$\u{k}{l+1} = \sum_{i} \w{ki}{l+1} f(\u{i}{l})$に注意して，
+    \begin{align*}
+        \fp{\u{k}{l+1}}{\u{j}{l}} = \w{kj}{l+1} f'(\u{j}{l})
+    \end{align*}
+    よって式(\ref{e4_10})は，
+    \begin{align}
+        \d{j}{l} = f'(\u{j}{l}) \sum_{k=0}^{\upsilon(l+1)} \d{k}{l+1} \w{kj}{l+1}  \label{e4_12}
+    \end{align}
+    と表される．
+    この式は，$\d{j}{l}$が$\d{k}{l+1} (k = 0, \ldots , \upsilon(l+1))$により計算できることを意味する．
+
+    \begin{itemize}
+        \item 微分計算は出力層から入力層へと順に計算できる．
+        \item 順伝播とは逆向きに伝播するので誤差逆伝播と呼ばれる．
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{誤差逆伝播法}
+    また，逆伝播の最初の値
+    \begin{align*}
+        \d{j}{L} = \fp{E_n}{\u{j}{L}}
+    \end{align*}
+    は陽に計算される．
+
+    (\ref{e4_9})式右辺第二項について，
+    $\u{j}{l} = \sum_{k} \w{jk}{l} \z{k}{l-1}$に注意して，
+    \begin{align*}
+        \fp{\u{j}{l}}{\w{ji}{l}} = \z{i}{l-1}
+    \end{align*}
+    以上より，(\ref{e4_9})式は，
+    \begin{align}
+        \fp{E_n}{\w{ji}{l}} = \d{j}{l} \z{i}{l-1}  \label{e4_13}
+    \end{align}
+    と表される．
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{誤差逆伝播法}
+    以上より，訓練サンプル$(\bm{x}_n, \bm{d}_n)$が与えられたとき，この訓練サンプルについての誤差関数$E_n$の勾配は次の手順で得られる．
+    \begin{block}{誤差逆伝播法による勾配計算}
+        \begin{enumerate}
+            \item $\bm{z}^{(1)} = \bm{x}_n$として各層の入出力$\bm{u}^{(l)}, \bm{z}^{(l)} (l = 2,\ldots, L)$を計算．\\
+            このとき計算は入力層から順に行われる．[順伝播]
+            \item 出力層(第$L$層)の誤差$\d{j}{L}$を計算．
+            \item 中間層について，(\ref{e4_12})式より誤差$\d{j}{l} (l = 2, \ldots , L-1)$を計算．\\
+            このとき計算は出力層から順に行われる．[逆伝播]
+            \item (\ref{e4_13})式より各層の重み$\w{ji}{l}$に関する微分を計算．
+        \end{enumerate}
+    \end{block}
+
+    複数個の訓練サンプルについての誤差の総和は
+    \begin{align*}
+        \fp{E}{\w{ji}{l}} = \sum_{n} \fp{E_n}{\w{ji}{l}}
+    \end{align*}
+    より，単に加算すればよい．
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{誤差逆伝播法}
+    計算量について考える．
+    ネットワークの重みの総数を$W$とおく．
+
+    このとき，順伝播+逆伝播により勾配$\nabla E$を求めるのには，$\mathcal{O}(W)$の計算が必要となる．
+    \begin{quote}
+    $\because$ 一般的に，$(\text{重み数}) >> (\text{ユニット数})$であることに注意する．
+    順伝播計算の大部分は，$\u{j}{l} = \sum_{i} \w{ji}{l} \z{i}{l-1}$であるので，計算量は$W$による．
+
+    逆伝播計算についても，$\d{j}{l} = f'(\u{j}{l}) \sum_{k} \d{k}{l+1} \w{kj}{l+1}$より同様．
+    \end{quote}
+    このことより，数値微分
+    \begin{align*}
+        \fp{E_n}{\w{ji}{l}} = \frac{1}{\varepsilon} (E_n(\w{ji}{l} + \varepsilon) - E_n(\w{ji}{l})) + O(\varepsilon)
+    \end{align*}
+    は，全ての重みについて$E_n(\w{ji}{l} + \varepsilon)$を計算する必要があるため，全体では$\mathcal{O}(W^2)$となる．
+
+    数値微分は計算効率は良くないが，逆伝播の実装の確認として有用．
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{誤差逆伝播法}
+    ここまでの計算を行列形式で表す．
+    但し，バイアスと重みを区別して扱う．
+    \begin{itemize}
+        \item $\bm{X} = \begin{bmatrix} \bm{x}_1 \cdots \bm{x}_N\end{bmatrix}$
+        : $\bm{x}_n$は$n$番目の訓練サンプル．
+        \item $\bup{U}{l} = \begin{bmatrix} \bu{1}{l} \cdots \bu{N}{l} \end{bmatrix}$
+        : $\bu{n}{l}$は$\bm{x}_n$についての$\tp \begin{bmatrix}\u{1}{l} \cdots \u{\upsilon(l)}{l}\end{bmatrix}$
+        \item $\bup{Z}{l} = \begin{bmatrix} \bz{1}{l} \cdots \bz{N}{l} \end{bmatrix}$
+        : $\bz{n}{l}$は$\bu{n}{l}$と同様．
+        \item $\bup{W}{l} = \begin{bmatrix} \w{ji}{l} \end{bmatrix}_{\substack{1 \leq j \leq \upsilon(l) \\ 1 \leq i \leq \upsilon(l-1)}}$
+        : ユニット間に接続がなければ0．
+        \item $\bup{b}{l} = \tp \begin{bmatrix} b_1 \cdots b_{\upsilon(l)} \end{bmatrix}$
+    \end{itemize}
+    以上より，順伝播計算は$\bup{U}{1} = \bm{X}$として，
+    \begin{align}
+        \bup{U}{l} &= \bup{W}{l} \bup{Z}{l-1} + \bup{b}{l} \, \tp\bm{1}_{N} \\
+        \bup{Z}{l} &= f^{(l)}\left( \bup{U}{l} \right)
+    \end{align}
+    と表される$(l = 2, \ldots , L)$．但し，活性化関数$f^{(l)}$は各成分に適応されることとする．
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{誤差逆伝播法}
+    逆伝播について，
+    \begin{itemize}
+        \item $\bm{Y} = \begin{bmatrix} \bm{y}_1 \cdots \bm{y}_N \end{bmatrix}$
+        : $\bm{y}_n$は$\bm{x}_n$についての出力.
+        \item $\bm{D} = \begin{bmatrix} \bm{d}_1 \cdots \bm{d}_N \end{bmatrix}$
+        : $\bm{d}_n$は$\bm{x}_n$についての出力目標.
+        \item $\bup{\Delta}{l} = \begin{bmatrix} \bd{1}{l} \cdots \bd{N}{l} \end{bmatrix}$
+        : $\bd{n}{l}$は$\bm{x}_n$についての$\tp \begin{bmatrix}\d{1}{l} \cdots \d{\upsilon(l)}{l}\end{bmatrix}$
+    \end{itemize}
+    とおく．
+    以上より，逆伝播計算は$\bup{\Delta}{L} = \bm{D} - \bm{Y}$として，
+    \begin{align}
+        \bup{\Delta}{l} = f^{(l)'}(\bup{U}{l}) \odot (\tp\bup{W}{l+1} \bup{\Delta}{l+1})  \label{e4_15}
+    \end{align}
+    と表される$(l = L-1, \ldots , 2)$．但し，$\odot$はアダマール積．
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{誤差逆伝播法}
+    誤差関数の勾配計算について，
+    \begin{itemize}
+        \item $\partial\bup{W}{l} = \begin{bmatrix} \fp{E}{\w{ji}{l}} \end{bmatrix}_{\substack{1 \leq j \leq \upsilon(l) \\ 1 \leq i \leq \upsilon(l-1)}}$，
+        $\partial\bup{b}{l} = \tp \begin{bmatrix} \fp{E}{\b{1}{l}} \cdots \fp{E}{\b{\upsilon(l)}{l}} \end{bmatrix}$
+    \end{itemize}
+    とおく．
+    以上より，
+    \begin{align*}
+        \partial\bup{W}{l} &= \frac{1}{N} \bup{\Delta}{l} \, \tp\bup{Z}{l-1} \\
+        \partial\bup{b}{l} &= \frac{1}{N} \bup{\Delta}{l} \bm{1}_N
+    \end{align*}
+    となり，パラメータ更新は，
+    \begin{align}
+        \bup{W}{l} &\leftarrow \bup{W}{l} - \varepsilon \, \partial\bup{W}{l}  \label{rw}\\
+        \bup{b}{l} &\leftarrow \bup{b}{l} - \varepsilon \, \partial\bup{b}{l}  \label{rb}
+    \end{align}
+    と表される．
+    重みの更新について，重み減衰やモメンタムを用いる場合には，(\ref{rw})(\ref{rb})式右辺第二項を適当に修正する．
+\end{frame}
+
+
+\end{document}
