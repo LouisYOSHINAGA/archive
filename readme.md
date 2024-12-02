@@ -34,19 +34,19 @@
     誤差逆伝播の解説スライド。
 
     - `jukebox`：
-    論文"Jukebox: A Generative Model for Music"の解説スライド。
+    論文"[Jukebox: A Generative Model for Music](https://arxiv.org/abs/2005.00341)"の解説スライド。
 
     - `lexicons`：
-    文献"Speech and Language Processing (3rd ed. draft)"のChapter20（注：当時）Lexicons for Sentiment, Affect, and Connotationの解説スライド。
+    文献"[Speech and Language Processing (3rd ed. draft)](https://web.stanford.edu/~jurafsky/slp3/)"のChapter20（注：当時）Lexicons for Sentiment, Affect, and Connotationの解説スライド。
 
     - `lstm`：
     文献「深層学習」第7章 再帰型ニューラルネットの解説スライド。
 
     - `maestro`：
-    論文"Enabling Factorized Piano Music Modeling and Generation with the MAESTRO Dataset"の解説スライド。
+    論文"[Enabling Factorized Piano Music Modeling and Generation with the MAESTRO Dataset](https://arxiv.org/abs/1810.12247)"の解説スライド。
 
     - `sparsetransformer`：
-    論文"Generating Long Sequences with Sparse Transformers"の解説スライド。
+    論文"[Generating Long Sequences with Sparse Transformers](https://arxiv.org/abs/1904.10509)"の解説スライド。
 
     - `wavenet`：
-    論文"WaveNet: A Generative Model for Raw Audio"の解説スライド。
+    論文"[WaveNet: A Generative Model for Raw Audio](https://arxiv.org/abs/1609.03499)"の解説スライド。
