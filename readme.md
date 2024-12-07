@@ -27,7 +27,7 @@
     「QR分解」
     QR分解の解説文章。
 
-- `paper`：
+- `slide`：
 研究室での論文紹介・輪講で作成したスライド。
 
     - `backward`：
@@ -37,10 +37,11 @@
     論文"[Jukebox: A Generative Model for Music](https://arxiv.org/abs/2005.00341)"の解説スライド。
 
     - `lexicons`：
-    文献"[Speech and Language Processing (3rd ed. draft)](https://web.stanford.edu/~jurafsky/slp3/)"のChapter20（注：当時）Lexicons for Sentiment, Affect, and Connotationの解説スライド。
+    文献"[Speech and Language Processing (3rd ed. draft)](https://web.stanford.edu/~jurafsky/slp3/)"のChapter20 <sup>注</sup> Lexicons for Sentiment, Affect, and Connotationの解説スライド。
+    注：作成当時の章立て。その後加筆修正されており現在の章立てとは異なります。
 
     - `lstm`：
-    文献「深層学習」第7章 再帰型ニューラルネットの解説スライド。
+    文献「深層学習」（ISBN: 978-4-06-152902-1）第7章 再帰型ニューラルネットの解説スライド。
 
     - `maestro`：
     論文"[Enabling Factorized Piano Music Modeling and Generation with the MAESTRO Dataset](https://arxiv.org/abs/1810.12247)"の解説スライド。
