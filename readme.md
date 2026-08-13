@@ -51,3 +51,6 @@
 
     - `wavenet`：
     論文"[WaveNet: A Generative Model for Raw Audio](https://arxiv.org/abs/1609.03499)"の解説スライド。
+
+- `template`：
+beamer styleのpowerpointテンプレート
